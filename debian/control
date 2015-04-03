@@ -1,0 +1,18 @@
+Source: dtdnssync
+Section: net
+Priority: optional
+Maintainer: Christian Göttsche <cgzones@googlemail.com>
+Standards-Version: 3.9.8
+Build-Depends: debhelper (>= 9),
+               dh-systemd (>=1.5),
+               libasio-dev,
+               libssl-dev
+
+Package: dtdnssync
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
+Description: dtdns ip updater
+ dtdnssync is a tool to keep your dns entry up to date
+ with an account on dtdns.com. It is written in c++
+ and uses a ssl encrypted connection for the update
+ process. It is designed to run as non-root.

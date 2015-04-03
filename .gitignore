@@ -1,0 +1,6 @@
+# binaries
+dtdnssync
+dtdnssyncd
+
+# object files
+*.o

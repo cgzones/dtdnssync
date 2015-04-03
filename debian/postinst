@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = "configure" ]; then
+  # run on upgrade and new package installation
+  if ! getent passwd dtdnssync >/dev/null; then
+    adduser --system --group --quiet --no-create-home --home /nonexistent dtdnssync
+  fi
+  chown -R root:dtdnssync /etc/dtdnssync/
+fi
+
+#DEBHELPER#
