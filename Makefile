@@ -5,7 +5,7 @@ SHARE   ?= ${DESTDIR}/usr/share
 
 #general flags
 CXXFLAGS = -std=c++14
-CXXFLAGS += -flto
+#CXXFLAGS += -flto
 
 # asio flags
 CXXFLAGS += -DASIO_STANDALONE -DASIO_NO_DEPRECATED

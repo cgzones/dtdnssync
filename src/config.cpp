@@ -72,9 +72,5 @@ dtdnssync_config parse_config(const std::string & cfg_path) {
 	}
     }
 
-    if(cfg.hostname.empty() or cfg.hostname == "yourdomain") {
-	throw std::runtime_error { "Hostname not set" };
-    }
-
     return cfg;
 }

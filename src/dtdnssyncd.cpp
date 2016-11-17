@@ -123,6 +123,12 @@ int main(int argc, char ** argv) {
         return EXIT_FAILURE;
     }
 
+    if(cfg.hostname.empty() or cfg.hostname == "yourdomain") {
+	std::cerr << "Configuration: Hostname not set\n";
+	std::cerr << "Exiting\n";
+	return EXIT_SUCCESS;
+    }
+
     FILELog::domain() = "dtdnssync";
     if(debug_flag == 1 or cfg.debug) { FILELog::reporting_level() = log_level::DEBUG; }
     else { FILELog::reporting_level() = log_level::INFO; }

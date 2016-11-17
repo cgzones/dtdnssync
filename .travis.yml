@@ -5,24 +5,30 @@ sudo: required
 language: cpp
 compiler:
   - gcc
+  - clang
 
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise-3.8
     packages:
       - g++-6
+      - clang-3.8
       - libssl-dev
-      - libasio-dev
       - debhelper
       - dh-systemd
 
 before_install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
+  - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.8" CC="clang-3.8"; fi
 
-install: true
+install:
+  - wget ftp.de.debian.org/debian/pool/main/a/asio/libasio-dev_1.10.8-1_all.deb && sudo dpkg -i libasio-dev*.deb
 
 script:
   - make all
+
+  - ./dtdnssync --cfg cfg/dtdnssync.local.cfg externip
 
   - dpkg-buildpackage -nc -b -us -uc

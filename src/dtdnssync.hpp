@@ -2,7 +2,6 @@
 
 #include <string>
 #include <vector>
-#include <asio/ssl/context.hpp>
 #include <asio/ip/tcp.hpp>
 
 constexpr const char* version = "0.1_dev";
