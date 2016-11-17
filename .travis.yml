@@ -1,0 +1,28 @@
+# travis configuration
+dist: trusty
+sudo: required
+
+language: cpp
+compiler:
+  - gcc
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-6
+      - libssl-dev
+      - libasio-dev
+      - debhelper
+      - dh-systemd
+
+before_install:
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
+
+install: true
+
+script:
+  - make all
+
+  - dpkg-buildpackage -nc -b -us -uc
