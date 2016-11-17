@@ -2,31 +2,51 @@
 dist: trusty
 sudo: required
 
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "YoKUIYYa7sD1Lj8ePaUd4wQ5CYdYvhxw3zzYlWgjhB39YeXhh3/Pxerrxu2qbom0Ar9k9ECO2CHi94CuZw9rSdMJQIe50dy+8qJy6LeTb2eQq3l/LCg2rsnkv4p1KhtUKYGsErvJ/BHBoNkRIqd3LOe44RBeGgxkxjs1gJQTKmBDHULtcXx+i/a8YrqA1JwQbndCkwphxOI406BZH0XVPW7BVHkmIjqEhZknU6Bl4yRRThTAiTnt5FnF9RFrKRqbsdVD8wWOlP5pEv1xNdY0hMnC29qDMuGZiHmjMqQhdlC3hZNrvExdRuNqppbj+hBfbwcAJFCa/0QTXN+z7Lke7gbeng1Hu5zlVWKmWcoDOnl0dZE7blhzLG2UrbIVWM4fUq5OuP9XsMZLeOFSmbcIhhY5T013Yx44uYGyF4atn/PS5Vgr8ARRc7p0AjOSBshY9zJ8ptlwKvmUCTJwbjl4edXlDxWvtSirDEW1Gp1YkHu2aPUtdgLr0+Nj0na6RfsuFIq0Siwg9pl9SGsEeqkheb4bB1QbPkqerozzeu86+7k7DMPbqxfjnoy9uyLr57P5ubdSuetNf0GNWC6bTGKEbOGVBPuGH5gtdgeB+n3EIvWje4MMg1YLTBHFxx+FhF4fm/GqKW8xJhj1wBbHH+mlQpEs4dLCI+qamXOCSi3bQdA="
+
 language: cpp
 compiler:
-  - gcc
+  #  - gcc
   - clang
 
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.8
+      #- llvm-toolchain-precise-3.8
     packages:
       - g++-6
-      - clang-3.8
+      #- clang-3.8
       - libssl-dev
       - help2man
 
+  coverity_scan:
+    project:
+      name: "cgzones/dtdnssync"
+      description: "Build submitted via Travis CI"
+    notification_email: cgzones@googlemail.com
+    build_command_prepend: "make clean"
+    build_command: "make all"
+    branch_pattern: coverity_scan
+
 before_install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
-  - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.8" CC="clang-3.8"; fi
+  #- if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
+  #- if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.8" CC="clang-3.8"; fi
+
+  - if [ "$TRAVIS_BRANCH" = "coverity_scan" ]; then echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-; fi
 
 install:
   - wget ftp.de.debian.org/debian/pool/main/a/asio/libasio-dev_1.10.8-1_all.deb && sudo dpkg -i libasio-dev*.deb
 
 script:
   - make all
+
+  - if [ "$TRAVIS_BRANCH" = "coverity_scan" ]; then cat ${TRAVIS_BUILD_DIR}/cov-int/build-log.txt; fi
+  - if [ "$TRAVIS_BRANCH" = "coverity_scan" ]; then cat ${TRAVIS_BUILD_DIR}/cov-int/scm_log.txt; fi
 
 after_success:
   - ./dtdnssync --cfg cfg/dtdnssync.local.cfg externip
