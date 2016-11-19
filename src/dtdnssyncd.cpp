@@ -9,8 +9,9 @@
 #include <signal.h>
 #include <sys/types.h>
 
+static int pid_fd = 0;
 
-static void daemonize(const std::string & pidfile, const std::string & user, const std::string & group);
+static void daemonize(const std::string & pidfile, const std::string & user, const std::string & group, bool forking, bool usepid);
 static void daemon(const dtdnssync_config & cfg);
 static void signal_handler(int sig);
 
@@ -23,6 +24,8 @@ int main(int argc, char ** argv) {
     std::string log_path { "/var/log/dtdnssyncd.log" };
     std::string user, group;
     int debug_flag = 0;
+    bool forking = true;
+    bool usepid = true;
 
     while (true) {
         const struct option long_options[] = {
@@ -32,13 +35,15 @@ int main(int argc, char ** argv) {
         { "pid-file", required_argument, nullptr      , 'p' },
         { "user"    , required_argument, nullptr      , 'u' },
         { "group"   , required_argument, nullptr      , 'g' },
+	{ "nofork"  , no_argument      , nullptr      , 'n' },
+	{ "nopid"   , no_argument      , nullptr      , 'o' },
 	{ "version" , no_argument      , nullptr      , 'v' },
         { "help"    , no_argument      , nullptr      , 'h' },
         { nullptr   , 0                , nullptr      , 0   }
 	};
         int option_index = 0;
 
-        const int c = getopt_long(argc, argv, "c:hp:l:u:g:", long_options, &option_index);
+        const int c = getopt_long(argc, argv, "c:hnvop:l:u:g:", long_options, &option_index);
 
         if (c == -1) { break; }
 
@@ -57,6 +62,10 @@ int main(int argc, char ** argv) {
             break;
 
         case 'p':
+            if(!usepid) {
+                std::cerr << "pid-file and nopid defined.\n";
+                return EXIT_FAILURE;
+            }
             pid_path = optarg;
             break;
 
@@ -70,6 +79,18 @@ int main(int argc, char ** argv) {
 
         case 'g':
             group = optarg;
+            break;
+
+        case 'n':
+            forking = false;
+            break;
+
+        case 'o':
+            if(pid_path != "/run/dtdnssyncd.pid") {
+                std::cerr << "pid-file and nopid defined.\n";
+                return EXIT_FAILURE;
+	    }
+            usepid = false;
             break;
 
         case 'h':
@@ -123,12 +144,6 @@ int main(int argc, char ** argv) {
         return EXIT_FAILURE;
     }
 
-    if(cfg.hostname.empty() or cfg.hostname == "yourdomain") {
-	std::cerr << "Configuration: Hostname not set\n";
-	std::cerr << "Exiting\n";
-	return EXIT_SUCCESS;
-    }
-
     FILELog::domain() = "dtdnssync";
     if(debug_flag == 1 or cfg.debug) { FILELog::reporting_level() = log_level::DEBUG; }
     else { FILELog::reporting_level() = log_level::INFO; }
@@ -138,21 +153,38 @@ int main(int argc, char ** argv) {
         return EXIT_FAILURE;
     }
 
+    if(cfg.hostname.empty() or cfg.hostname == "yourdomain") {
+	std::cerr << "Configuration: Hostname not set     Exiting\n";
+	FILE_LOG(log_level::WARNING) << "Configuration: Hostname not set     Exiting\n";
+	return EXIT_SUCCESS;
+    }
+
     FILE_LOG(log_level::DEBUG) << "configuration:";
     FILE_LOG(log_level::DEBUG) << "  interval          : " << cfg.interval;
     FILE_LOG(log_level::DEBUG) << "  cache_external_ip : " << std::boolalpha << cfg.cache_external_ip;
     FILE_LOG(log_level::DEBUG) << "  cert_file         : " << cfg.cert_file;
     FILE_LOG(log_level::DEBUG) << "  debug             : " << std::boolalpha << cfg.debug;
     FILE_LOG(log_level::DEBUG) << "  hostname          : " << cfg.hostname;
-    FILE_LOG(log_level::DEBUG) << "  password          : " << cfg.password;
+    FILE_LOG(log_level::DEBUG) << "  password          : ********";
 
 
-    daemonize(pid_path, user, group);
+    daemonize(pid_path, user, group, forking, usepid);
 
     FILE_LOG(log_level::INFO) << "Starting for host '" << cfg.hostname << "' with an interval of " << cfg.interval << " minutes and ip caching "
                               << (cfg.cache_external_ip ? "enabled" : "disabled");
 
-    daemon(cfg);
+    try {
+        daemon(cfg);
+    } catch(const std::exception & e) {
+        FILE_LOG(log_level::ERROR) << "Unhandled exception escaped: " << e.what();
+        FILE_LOG(log_level::ERROR) << "EXITING!!!";
+        return EXIT_FAILURE;
+    }
+
+    if(usepid && pid_fd != 0) {
+        ::close(pid_fd);
+        ::unlink(pid_path.c_str());
+    }
 
     FILE_LOG(log_level::INFO) << "ending";
 
@@ -177,9 +209,9 @@ static void signal_handler(int sig) {
     }
 }
 
-static void daemonize(const std::string & pidfile, const std::string & user, const std::string & group) {
+static void daemonize(const std::string & pidfile, const std::string & user, const std::string & group, bool forking, bool usepid) {
 
-    {
+    if(forking) {
         auto i = ::fork();
         if (i < 0) {
             FILE_LOG(log_level::ERROR) << "Can not fork: " << ::strerror(errno);
@@ -189,7 +221,7 @@ static void daemonize(const std::string & pidfile, const std::string & user, con
         if (i > 0) { exit(0); }
     }
 
-    if(::setsid() < 0) {
+    if(forking && ::setsid() < 0) {
         FILE_LOG(log_level::ERROR) << "Error calling setsid: " << ::strerror(errno);
 	FILE_LOG(log_level::WARNING) << "Exiting!";
         exit(1);
@@ -203,7 +235,7 @@ static void daemonize(const std::string & pidfile, const std::string & user, con
     ::signal(SIGHUP , signal_handler);
     ::signal(SIGTERM, signal_handler);
 
-    {
+    if(forking) {
         auto i = ::fork();
         if (i < 0) {
             FILE_LOG(log_level::ERROR) << "Can not fork: " << ::strerror(errno);
@@ -235,8 +267,8 @@ static void daemonize(const std::string & pidfile, const std::string & user, con
         exit (1);
     }
 
-    {
-        auto pid_fd = open(pidfile.c_str(), O_WRONLY|O_CREAT, 0640);
+    if(usepid) {
+        pid_fd = open(pidfile.c_str(), O_WRONLY|O_CREAT, 0640);
         if (pid_fd < 0) {
             FILE_LOG(log_level::ERROR) << "Can not open " << pidfile << ": " << ::strerror(errno);
 	    FILE_LOG(log_level::WARNING) << "Exiting!";

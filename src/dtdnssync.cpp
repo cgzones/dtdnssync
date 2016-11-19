@@ -98,7 +98,7 @@ int main(int argc, char ** argv) {
               << "  cert_file         : " << cfg.cert_file << '\n'
 	      << "  debug             : " << std::boolalpha << cfg.debug << '\n'
               << "  hostname          : " << cfg.hostname << '\n'
-              << "  password          : " << cfg.password << '\n'
+              << "  password          : ********\n"
               << '\n';
 
     return EXIT_SUCCESS;

@@ -8,6 +8,8 @@ if [ "$1" = "configure" ]; then
     adduser --system --group --quiet --no-create-home --home /nonexistent dtdnssync
   fi
   chown -R root:dtdnssync /etc/dtdnssync/
+  touch /var/log/dtdnssyncd.log
+  chown dtdnssync:dtdnssync /var/log/dtdnssyncd.log
 fi
 
 #DEBHELPER#

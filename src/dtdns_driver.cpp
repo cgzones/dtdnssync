@@ -62,12 +62,12 @@ asio::ip::address task_externip(const std::string & cert_file) {
     const std::string response = ostream.str();
 
     if(response.compare(0, 15, "HTTP/1.1 200 OK") != 0) {
-        throw std::runtime_error { "http: unsuccessful" };
+        throw std::runtime_error { "http: unsuccessful: " + response };
     }
 
     const auto pos = response.find("\r\n\r\n");
     if(pos == std::string::npos) {
-        throw std::runtime_error { "http: no newline" };
+        throw std::runtime_error { "http: no newline: " + response };
     }
 
     return asio::ip::address::from_string(trim(std::string { response, pos + 4, response.length() - (pos + 4) }));
@@ -112,12 +112,12 @@ void task_updateip(const std::string & hostname, const std::string & password, c
     const std::string response = ostream.str();
 
     if(response.compare(0, 15, "HTTP/1.1 200 OK") != 0) {
-        throw std::runtime_error { "http: unsuccessful" };
+        throw std::runtime_error { "http: unsuccessful: " + response };
     }
 
     const auto pos = response.find("\r\n\r\n");
     if(pos == std::string::npos) {
-        throw std::runtime_error { "http: no newline" };
+        throw std::runtime_error { "http: no newline: " + response };
     }
 
     std::string response_content { response, pos + 4, response.length() - (pos + 4) };
@@ -127,7 +127,7 @@ void task_updateip(const std::string & hostname, const std::string & password, c
     const std::string expected { "Host " + hostname + " now points to " };
 
     if(response_content.compare(0, expected.length(), expected) != 0) {
-        throw std::runtime_error { "dtdns: " + response_content };
+        throw std::runtime_error { "unexpected dtdns response: " + response_content };
     }
 }
 
