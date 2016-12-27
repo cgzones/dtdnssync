@@ -29,6 +29,7 @@ install:
 script:
   - make all
 
-  - ./dtdnssync --cfg cfg/dtdnssync.local.cfg externip
-
   - dpkg-buildpackage -nc -b -us -uc
+
+after_success:
+  - ./dtdnssync --cfg cfg/dtdnssync.local.cfg externip
