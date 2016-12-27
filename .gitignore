@@ -4,3 +4,8 @@ dtdnssyncd
 
 # object files
 *.o
+
+# eclipse files
+.settings/
+.cproject
+.project
