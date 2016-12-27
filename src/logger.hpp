@@ -3,6 +3,7 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#include <unistd.h>
 
 // Adopted from http://www.drdobbs.com/cpp/logging-in-c/201804215
 
