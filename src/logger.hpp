@@ -70,7 +70,7 @@ std::ostringstream & Log<OutputPolicy>::get(const log_level & level) {
 	m_os << time_buffer;
 	m_os << ' ' << std::setw(16) << Log::domain();
 
-	m_os << ' ' << std::setw(4) << ::getpid();
+	m_os << ' ' << std::setw(5) << ::getpid();
 
 	if (reporting_level() >= log_level::DEBUG) {
 		m_os << ' ' << ::pthread_self();
