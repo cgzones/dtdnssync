@@ -2,6 +2,8 @@
 
 #include "logger.hpp"
 
+#include <asio/io_service.hpp>
+
 #include <getopt.h>
 #include <grp.h>
 #include <iostream>
@@ -170,8 +172,6 @@ int main(int argc, char ** argv) {
 
 	FILE_LOG(log_level::DEBUG) << "configuration:";
 	FILE_LOG(log_level::DEBUG) << "  interval          : " << cfg.interval;
-	FILE_LOG(log_level::DEBUG) << "  cache_external_ip : " << std::boolalpha
-			<< cfg.cache_external_ip;
 	FILE_LOG(log_level::DEBUG) << "  cert_file         : " << cfg.cert_file;
 	FILE_LOG(log_level::DEBUG) << "  debug             : " << std::boolalpha
 			<< cfg.debug;
@@ -182,8 +182,7 @@ int main(int argc, char ** argv) {
 
 	FILE_LOG(log_level::INFO) << "Starting for host '" << cfg.hostname
 			<< "' with an interval of " << cfg.interval
-			<< " minutes and ip caching "
-			<< (cfg.cache_external_ip ? "enabled" : "disabled");
+			<< " minutes";
 
 	try {
 		daemon(cfg);
@@ -368,63 +367,63 @@ static void daemonize(const std::string & pidfile, const std::string & user,
 	}
 }
 
-static void run() {
+static void run(const dtdnssync_config & cfg,
+		asio::ip::address& externip_cached) {
+	FILE_LOG(log_level::DEBUG) << "running new check...";
 
+	try {
+		asio::io_service io_service;
+
+		const auto externip = task_externip(io_service, cfg.cert_file);
+		FILE_LOG(log_level::DEBUG) << "current extern IP: " << externip;
+		FILE_LOG(log_level::DEBUG) << "cached extern IP:  " << externip_cached;
+
+		if (externip == externip_cached) {
+			FILE_LOG(log_level::DEBUG)
+					<< "extern IP not changed, no need to update IP";
+		} else {
+			FILE_LOG(log_level::DEBUG) << "extern IP might have changed";
+
+			const auto hostnameips = task_ip(io_service, cfg.hostname);
+			FILE_LOG(log_level::DEBUG) << "hostname IPs: ";
+			for (const auto & ip : hostnameips) {
+				FILE_LOG(log_level::DEBUG) << "- " << ip;
+			}
+
+			bool uptodate = false;
+			for (const auto & ip : hostnameips) {
+				if (ip == externip) {
+					uptodate = true;
+					break;
+				}
+			}
+
+			if (!uptodate) {
+				FILE_LOG(log_level::DEBUG) << "IP needs to be updated";
+
+				task_updateip(io_service, cfg.hostname, cfg.password,
+						cfg.cert_file);
+
+				FILE_LOG(log_level::INFO) << "IP updated from "
+						<< externip_cached << " to " << externip;
+			} else {
+				FILE_LOG(log_level::DEBUG) << "IP does not need to be updated";
+			}
+
+			externip_cached = externip;
+		}
+
+	} catch (const std::exception & e) {
+		FILE_LOG(log_level::ERROR) << e.what();
+	}
 }
 
 static void daemon(const dtdnssync_config & cfg) {
 	asio::ip::address externip_cached;
 
 	while (running) {
-		FILE_LOG(log_level::DEBUG) << "running new check...";
 
-		try {
-			const auto externip = task_externip(cfg.cert_file);
-			FILE_LOG(log_level::DEBUG) << "current extern IP: " << externip;
-			if (cfg.cache_external_ip) {
-				FILE_LOG(log_level::DEBUG) << "cached extern IP: "
-						<< externip_cached;
-			}
-
-			if (cfg.cache_external_ip && (externip == externip_cached)) {
-				FILE_LOG(log_level::DEBUG)
-						<< "extern IP not changed, no need to update IP";
-			} else {
-				FILE_LOG(log_level::DEBUG) << "extern IP might have changed";
-
-				const auto hostnameips = task_ip(cfg.hostname);
-				FILE_LOG(log_level::DEBUG) << "hostname IPs: ";
-				for (const auto & ip : hostnameips) {
-					FILE_LOG(log_level::DEBUG) << "- " << ip;
-				}
-
-				bool uptodate = false;
-				for (const auto & ip : hostnameips) {
-					if (ip == externip) {
-						uptodate = true;
-						break;
-					}
-				}
-
-				if (!uptodate) {
-					FILE_LOG(log_level::DEBUG) << "IP needs to be updated";
-
-					task_updateip(cfg.hostname, cfg.password, cfg.cert_file);
-
-					FILE_LOG(log_level::INFO) << "IP updated to " << externip;
-				} else {
-					FILE_LOG(log_level::DEBUG)
-							<< "IP does not need to be updated";
-				}
-
-				if (cfg.cache_external_ip) {
-					externip_cached = externip;
-				}
-			}
-
-		} catch (const std::exception & e) {
-			FILE_LOG(log_level::ERROR) << e.what();
-		}
+		run(cfg, externip_cached);
 
 		FILE_LOG(log_level::DEBUG) << "sleeping";
 		::sleep(static_cast<unsigned int>(cfg.interval) * 60);

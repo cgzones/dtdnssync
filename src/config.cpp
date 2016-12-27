@@ -67,8 +67,6 @@ dtdnssync_config parse_config(const std::string & cfg_path) {
 			cfg.password = remove_quotes(value);
 		} else if (key == "cert_file") {
 			cfg.cert_file = remove_quotes(value);
-		} else if (key == "cache_external_ip") {
-			cfg.cache_external_ip = parse_bool(value);
 		} else if (key == "debug") {
 			cfg.debug = parse_bool(value);
 		} else {

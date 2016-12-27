@@ -12,22 +12,6 @@ int main(int argc, char ** argv) {
 		return EXIT_FAILURE;
 	}
 
-	if (::strcmp(argv[1], "help") == 0 or ::strcmp(argv[1], "-h") == 0
-			or ::strcmp(argv[1], "--help") == 0) {
-		std::cout << "dtdnssync " << version << "\n" << "usage: " << argv[0]
-				<< " [options] command\n" << "\n" << "  options:\n"
-				<< "    --cfg PATH       use custom configuration file (default: "
-				<< cfg_path << ")\n" << "\n" << "  commands:\n"
-				<< "    currentip        get IP currently set for your domain\n"
-				<< "    externip         get your current external IP\n"
-				<< "    update           update the IP for your domain\n"
-				<< "    check            check if an update is needed\n"
-				<< "    dumpconfig       show configuration\n"
-				<< "    version          show version\n"
-				<< "    help             this help overview\n" << "\n";
-		return EXIT_SUCCESS;
-	}
-
 	if (::strcmp(argv[argc_progress], "--cfg") == 0) {
 		if (!argv[++argc_progress]) {
 			std::cerr << "Option --cfg need an argument!\n";
@@ -43,6 +27,23 @@ int main(int argc, char ** argv) {
 			std::cerr << "Invalid command given! Try " << argv[0] << " help\n";
 			return EXIT_FAILURE;
 		}
+	}
+
+	if (::strcmp(argv[argc_progress], "help") == 0
+			or ::strcmp(argv[argc_progress], "-h") == 0
+			or ::strcmp(argv[1], "--help") == 0) {
+		std::cout << "dtdnssync " << version << "\n" << "usage: " << argv[0]
+				<< " [options] command\n" << "\n" << "  options:\n"
+				<< "    --cfg PATH       use custom configuration file (default: "
+				<< cfg_path << ")\n" << "\n" << "  commands:\n"
+				<< "    currentip        get IP currently set for your domain\n"
+				<< "    externip         get your current external IP\n"
+				<< "    update           update the IP for your domain\n"
+				<< "    check            check if an update is needed\n"
+				<< "    dumpconfig       show configuration\n"
+				<< "    version          show version\n"
+				<< "    help             this help overview\n" << "\n";
+		return EXIT_SUCCESS;
 	}
 
 	dtdnssync_config cfg;
@@ -61,7 +62,9 @@ int main(int argc, char ** argv) {
 		return EXIT_SUCCESS;
 	} else if (::strcmp(argv[argc_progress], "currentip") == 0) {
 		try {
-			std::vector<asio::ip::address> addresses = task_ip(cfg.hostname);
+			asio::io_service io_service;
+			std::vector<asio::ip::address> addresses = task_ip(io_service,
+					cfg.hostname);
 			std::cout << "address(es) for " << cfg.hostname << ":";
 			for (const asio::ip::address & addr : addresses) {
 				std::cout << " " << addr;
@@ -77,7 +80,8 @@ int main(int argc, char ** argv) {
 		return EXIT_SUCCESS;
 	} else if (::strcmp(argv[argc_progress], "externip") == 0) {
 		try {
-			auto ip = task_externip(cfg.cert_file);
+			asio::io_service io_service;
+			auto ip = task_externip(io_service, cfg.cert_file);
 			std::cout << "current external ip: " << ip << "\n";
 
 		} catch (const std::exception & e) {
@@ -90,17 +94,18 @@ int main(int argc, char ** argv) {
 	} else if (::strcmp(argv[argc_progress], "dumpconfig") == 0) {
 		std::cout << "configuration from file " + cfg_path + ":\n"
 				<< "  interval          : " << cfg.interval << '\n'
-				<< "  cache_external_ip : " << std::boolalpha
-				<< cfg.cache_external_ip << '\n' << "  cert_file         : "
-				<< cfg.cert_file << '\n' << "  debug             : "
-				<< std::boolalpha << cfg.debug << '\n'
+				<< "  cert_file         : " << cfg.cert_file << '\n'
+				<< "  debug             : " << std::boolalpha << cfg.debug
+				<< '\n'
 				<< "  hostname          : " << cfg.hostname << '\n'
 				<< "  password          : ********\n" << '\n';
 
 		return EXIT_SUCCESS;
 	} else if (::strcmp(argv[argc_progress], "update") == 0) {
 		try {
-			task_updateip(cfg.hostname, cfg.password, cfg.cert_file);
+			asio::io_service io_service;
+			task_updateip(io_service, cfg.hostname, cfg.password,
+					cfg.cert_file);
 		} catch (const std::exception & e) {
 			std::cerr << "Unable to update IP: " << e.what() << '\n';
 			return EXIT_FAILURE;
@@ -112,8 +117,9 @@ int main(int argc, char ** argv) {
 		return EXIT_SUCCESS;
 	} else if (::strcmp(argv[argc_progress], "check") == 0) {
 		try {
-			auto externip = task_externip(cfg.cert_file);
-			auto ips = task_ip(cfg.hostname);
+			asio::io_service io_service;
+			auto externip = task_externip(io_service, cfg.cert_file);
+			auto ips = task_ip(io_service, cfg.hostname);
 			bool match { false };
 
 			for (const auto & ip : ips) {

@@ -1,14 +1,13 @@
 #include "dtdnssync.hpp"
 
-#include <asio/io_service.hpp>
 #include <asio/ssl/stream.hpp>
 #include <asio/ssl/rfc2818_verification.hpp>
 #include <asio/connect.hpp>
 
 static asio::ssl::context setup_ssl_context(const std::string & cert_file);
 
-std::vector<asio::ip::address> task_ip(const std::string & hostname) {
-	asio::io_service io_service;
+std::vector<asio::ip::address> task_ip(asio::io_service& io_service,
+		const std::string & hostname) {
 	asio::ip::tcp::resolver resolver { io_service };
 	const asio::ip::tcp::resolver::query query { hostname, "" };
 
@@ -22,8 +21,8 @@ std::vector<asio::ip::address> task_ip(const std::string & hostname) {
 	return result;
 }
 
-asio::ip::address task_externip(const std::string & cert_file) {
-	asio::io_service io_service;
+asio::ip::address task_externip(asio::io_service& io_service,
+		const std::string & cert_file) {
 	asio::ssl::context ctx { setup_ssl_context(cert_file) };
 	asio::ssl::stream<asio::ip::tcp::socket> socket { io_service, ctx };
 	asio::ip::tcp::resolver resolver { io_service };
@@ -58,25 +57,31 @@ asio::ip::address task_externip(const std::string & cert_file) {
 
 	const std::string response = ostream.str();
 
-	if (response.compare(0, 15, "HTTP/1.1 200 OK") != 0) {
-		throw std::runtime_error { "http: unsuccessful: " + response };
+	const auto pos1 = response.find("\r\n");
+	if (pos1 == std::string::npos) {
+		throw std::runtime_error { "http: no newline: " + response };
+	}
+	const std::string first_line = response.substr(0, pos1);
+
+	if (first_line != "HTTP/1.1 200 OK") {
+		throw std::runtime_error { "http: unsuccessful: " + first_line };
 	}
 
-	const auto pos = response.find("\r\n\r\n");
-	if (pos == std::string::npos) {
-		throw std::runtime_error { "http: no newline: " + response };
+	const auto pos2 = response.find("\r\n\r\n");
+	if (pos2 == std::string::npos) {
+		throw std::runtime_error { "http: no double newline: " + response };
 	}
 
 	return asio::ip::address::from_string(
 			trim(
-					std::string { response, pos + 4, response.length()
-							- (pos + 4) }));
+					std::string { response, pos2 + 4, response.length()
+							- (pos2 + 4) }));
 
 }
 
-void task_updateip(const std::string & hostname, const std::string & password,
+void task_updateip(asio::io_service& io_service, const std::string & hostname,
+		const std::string & password,
 		const std::string & cert_file) {
-	asio::io_service io_service;
 	asio::ssl::context ctx { setup_ssl_context(cert_file) };
 	asio::ssl::stream<asio::ip::tcp::socket> socket { io_service, ctx };
 	asio::ip::tcp::resolver resolver { io_service };
@@ -112,19 +117,24 @@ void task_updateip(const std::string & hostname, const std::string & password,
 
 	const std::string response = ostream.str();
 
-	if (response.compare(0, 15, "HTTP/1.1 200 OK") != 0) {
-		throw std::runtime_error { "http: unsuccessful: " + response };
-	}
-
-	const auto pos = response.find("\r\n\r\n");
-	if (pos == std::string::npos) {
+	const auto pos1 = response.find("\r\n");
+	if (pos1 == std::string::npos) {
 		throw std::runtime_error { "http: no newline: " + response };
 	}
+	const std::string first_line = response.substr(0, pos1);
 
-	std::string response_content { response, pos + 4, response.length()
-			- (pos + 4) };
+	if (first_line != "HTTP/1.1 200 OK") {
+		throw std::runtime_error { "http: unsuccessful: " + first_line };
+	}
 
-	response_content = trim(response_content);
+	const auto pos2 = response.find("\r\n\r\n");
+	if (pos2 == std::string::npos) {
+		throw std::runtime_error { "http: no double newline: " + response };
+	}
+
+
+	std::string response_content = trim(
+			response.substr(pos2 + 4, response.length() - (pos2 + 4)));
 
 	const std::string expected { "Host " + hostname + " now points to " };
 
