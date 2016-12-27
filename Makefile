@@ -60,3 +60,6 @@ run_cppcheck:
 
 run_clang-tidy:
 	clang-tidy -header-filter=.* -checks=* src/*.cpp -- -std=c++14 -DASIO_STANDALONE -DASIO_NO_DEPRECATED
+
+debian_package: all
+	dpkg-buildpackage -nc -b -us -uc

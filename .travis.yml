@@ -29,7 +29,7 @@ install:
 script:
   - make all
 
-  - dpkg-buildpackage -nc -b -us -uc
+  - make debian_package
 
 after_success:
   - ./dtdnssync --cfg cfg/dtdnssync.local.cfg externip
