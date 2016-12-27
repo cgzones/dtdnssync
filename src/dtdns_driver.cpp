@@ -132,8 +132,8 @@ void task_updateip(const std::string & hostname, const std::string & password, c
 }
 
 static asio::ssl::context setup_ssl_context(const std::string & cert_file) {
-    asio::ssl::context ctx { asio::ssl::context::tlsv1 };
-    ctx.set_verify_mode(asio::ssl::verify_peer);
+    asio::ssl::context ctx { asio::ssl::context::tlsv12 };
+    ctx.set_verify_mode(asio::ssl::verify_peer | asio::ssl::verify_fail_if_no_peer_cert );
     ctx.set_verify_callback(asio::ssl::rfc2818_verification{"www.dtdns.com"});
     ctx.load_verify_file(cert_file);
 
