@@ -20,10 +20,16 @@ LDFLAGS = -lpthread -lssl -lcrypto
 # security link flags
 LDFLAGS += -fPIE -pie -Wl,-z,relro -Wl,-z,now -Wl,--no-undefined
 
-ifdef DEV
+ifdef MODE
+ifeq (${MODE}, DEV)
 	CXX = clang++
 	CXXFLAGS += -g -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -fsanitize=address,undefined
-endif
+else
+ifeq (${MODE}, RELEASE)
+	CXXFLAGS += -flto
+endif # RELEASE
+endif # DEV
+endif # MODE
 
 .PHONY: all clean install run_cppcheck run_clang-tidy
 
@@ -61,5 +67,5 @@ run_cppcheck:
 run_clang-tidy:
 	clang-tidy -header-filter=.* -checks=* src/*.cpp -- -std=c++14 -DASIO_STANDALONE -DASIO_NO_DEPRECATED
 
-debian_package: all
+debian_package:
 	dpkg-buildpackage -nc -b -us -uc
