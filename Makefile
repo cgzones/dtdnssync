@@ -25,13 +25,17 @@ ifeq (${MODE}, DEV)
 	CXX = clang++
 	CXXFLAGS += -g -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -fsanitize=address,undefined
 else
+ifeq (${MODE}, DEBUG)
+	CXXFLAGS += -g
+else
 ifeq (${MODE}, RELEASE)
 	CXXFLAGS += -flto
 endif # RELEASE
+endif # DEBUG
 endif # DEV
 endif # MODE
 
-.PHONY: all clean install run_cppcheck run_clang-tidy
+.PHONY: all clean install run_cppcheck run_clang-tidy debian_package
 
 all: dtdnssync dtdnssyncd
 
