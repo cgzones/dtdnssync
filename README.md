@@ -1,6 +1,7 @@
 # dtdnssync
 
 [![Build Status](https://travis-ci.org/cgzones/dtdnssync.svg?branch=master)](https://travis-ci.org/cgzones/dtdnssync)
+[![Coverity Scan](https://scan.coverity.com/projects/10843/badge.svg)](https://scan.coverity.com/projects/cgzones-dtdnssync)
 
 ## Overview
 
