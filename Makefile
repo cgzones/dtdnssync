@@ -35,7 +35,7 @@ endif # DEBUG
 endif # DEV
 endif # MODE
 
-.PHONY: all clean install run_cppcheck run_clang-tidy debian_package
+.PHONY: all clean install run_cppcheck run_clang-tidy debian_package debian_orig_tarball
 
 all: dtdnssync dtdnssyncd
 
@@ -70,6 +70,9 @@ run_cppcheck:
 
 run_clang-tidy:
 	clang-tidy -header-filter=.* -checks=* src/*.cpp -- -std=c++14 -DASIO_STANDALONE -DASIO_NO_DEPRECATED
+
+debian_orig_tarball:
+	tarGZIP="-9n" tar zfc ../dtdnssync_0.1.orig.tar.gz --sort=name cfg/ debian/ LICENSE Makefile README.md src/ VERSION .cproject .project .travis.yml .settings/
 
 debian_package:
 	dpkg-buildpackage -nc -b -us -uc
