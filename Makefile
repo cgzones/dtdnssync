@@ -5,10 +5,9 @@ SHARE   ?= ${DESTDIR}/usr/share
 
 #general flags
 CXXFLAGS = -std=c++14
-#CXXFLAGS += -flto
 
 # asio flags
-CXXFLAGS += -DASIO_STANDALONE -DASIO_NO_DEPRECATED
+CXXFLAGS += -DASIO_STANDALONE -DASIO_NO_DEPRECATED -DASIO_NO_TYPEID
 
 # security flags
 CXXFLAGS += -Wall -Wextra -Wpedantic -Wconversion -Wformat -Wformat-security -Werror
@@ -29,7 +28,7 @@ ifeq (${MODE}, DEBUG)
 	CXXFLAGS += -g
 else
 ifeq (${MODE}, RELEASE)
-	CXXFLAGS += -flto
+	CXXFLAGS += -flto -DASIO_DISABLE_BUFFER_DEBUGGING
 endif # RELEASE
 endif # DEBUG
 endif # DEV
@@ -39,13 +38,16 @@ endif # MODE
 
 all: dtdnssync dtdnssyncd
 
-dtdnssync: src/dtdnssync.o src/common.o src/config.o src/dtdns_driver.o
-	${CXX} ${CXXFLAGS} $^ ${LDFLAGS} -o $@
+OBJS = src/common.o src/config.o src/dtdns_driver.o
+HEAD = src/dtdnssync.hpp
+
+dtdnssync: src/dtdnssync.o ${OBJS} ${HEAD}
+	${CXX} ${CXXFLAGS} $< ${OBJS} ${LDFLAGS} -o $@
 	
-dtdnssyncd: src/dtdnssyncd.o src/common.o src/config.o src/dtdns_driver.o
-	${CXX} ${CXXFLAGS} $^ ${LDFLAGS} -o $@
+dtdnssyncd: src/dtdnssyncd.o ${OBJS} ${HEAD}
+	${CXX} ${CXXFLAGS} $< ${OBJS} ${LDFLAGS} -o $@
 	
-.cpp.o:
+%.o: %.cpp ${HEAD}
 	${CXX} ${CXXFLAGS} -c $< -o $@
 	
 clean:
@@ -59,20 +61,20 @@ clean:
 	rm -f debian/*.debhelper
 
 install: all
-	install -m 0600 cfg/dtdnssync.cfg ${ETC}/dtdnssync/dtdnssync.cfg
-	install -m 0440 cfg/dtdns.pem ${SHARE}/dtdnssync/dtdns.pem
+	install -m 0640 cfg/dtdnssync.cfg ${ETC}/dtdnssync/
+	install -m 0440 cfg/dtdns.pem ${SHARE}/dtdnssync/
 
 	install -m 0755 dtdnssync ${SBIN}
 	install -m 0755 dtdnssyncd ${SBIN}
 
 run_cppcheck:
-	cppcheck --quiet --force --enable=style --enable=missingInclude --inconclusive --std=c++11 --std=posix --library=std.cfg --library=posix.cfg --check-library -j4 src/
+	cppcheck --quiet --force --enable=style --enable=missingInclude --inconclusive --std=c++11 --std=posix --library=std.cfg --library=posix.cfg --check-library --inline-suppr -j4 src/
 
 run_clang-tidy:
-	clang-tidy -header-filter=.* -checks=* src/*.cpp -- -std=c++14 -DASIO_STANDALONE -DASIO_NO_DEPRECATED
+	clang-tidy -header-filter=.* -checks=* src/*.cpp -- -std=c++14 -DASIO_STANDALONE -DASIO_NO_DEPRECATED -DASIO_NO_TYPEID
 
 debian_orig_tarball:
-	tarGZIP="-9n" tar zfc ../dtdnssync_0.1.orig.tar.gz --sort=name cfg/ debian/ LICENSE Makefile README.md src/ VERSION .cproject .project .travis.yml .settings/
+	GZIP="-9n" tar zfc ../dtdnssync_0.1.orig.tar.gz --sort=name cfg/ debian/ LICENSE Makefile README.md src/ VERSION .cproject .project .travis.yml .settings/
 
 debian_package:
 	dpkg-buildpackage -nc -b -us -uc

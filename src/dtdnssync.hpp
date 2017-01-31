@@ -1,7 +1,8 @@
 #pragma once
 
-#include <asio/ip/tcp.hpp>
 #include <asio/io_service.hpp>
+#include <asio/ip/tcp.hpp>
+#include <asio/ssl/context.hpp>
 
 #include <string>
 #include <vector>
@@ -25,7 +26,9 @@ dtdnssync_config parse_config(const std::string & cfg_path);
 std::vector<asio::ip::address> task_ip(asio::io_service& io_service,
 		const std::string & hostname);
 asio::ip::address task_externip(asio::io_service& io_service,
-		const std::string & cert_file);
+		asio::ssl::context& ssl_ctx);
 void task_updateip(asio::io_service& io_service, const std::string & hostname,
 		const std::string & password,
-		const std::string & cert_file);
+		asio::ssl::context& ssl_ctx);
+
+asio::ssl::context setup_ssl_context(const std::string & cert_file);

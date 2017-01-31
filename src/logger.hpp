@@ -82,7 +82,7 @@ std::ostringstream & Log<OutputPolicy>::get(const log_level & level) {
 
 template<typename OutputPolicy>
 Log<OutputPolicy>::~Log() {
-	m_os << std::endl;
+	m_os << '\n';
 
 	OutputPolicy::output(m_os.str());
 }

@@ -1,6 +1,10 @@
-#include <fstream>
-
 #include "dtdnssync.hpp"
+
+#include <fstream>
+#include <grp.h>
+#include <pwd.h>
+#include <sys/types.h>
+
 
 static bool parse_bool(const std::string & value) {
 	if (value == "1" or value == "true" or value == "True" or value == "TRUE") {
@@ -16,6 +20,33 @@ static bool parse_bool(const std::string & value) {
 }
 
 dtdnssync_config parse_config(const std::string & cfg_path) {
+	// check file permissions
+	{
+		struct stat file_stat;
+
+		if (::stat(cfg_path.c_str(), &file_stat) < 0) {
+			throw std::runtime_error { "Can not stat configuration file "
+					+ cfg_path + ": " + ::strerror(errno) };
+		}
+		// cppcheck-suppress getpwuidCalled
+		struct passwd *pw = ::getpwuid(file_stat.st_uid);
+		// cppcheck-suppress getgrgidCalled
+		struct group *gr = ::getgrgid(file_stat.st_gid);
+		if ((file_stat.st_mode & S_IROTH) || (file_stat.st_mode & S_IWOTH)
+				|| (file_stat.st_mode & S_IXOTH)
+				|| !pw
+				|| (::strcmp(pw->pw_name, "root") != 0) || !gr
+				|| ((::strcmp(gr->gr_name, "dtdnssync") != 0)
+						&& (::strcmp(gr->gr_name, "root") != 0))) {
+			throw std::runtime_error {
+					"Invalid ownership or permission for configuration file "
+							+ cfg_path };
+			}
+
+
+	}
+
+
 	std::ifstream cfg_file { cfg_path };
 	if (!cfg_file.is_open()) {
 		throw std::runtime_error { "Can not open configuration file " + cfg_path

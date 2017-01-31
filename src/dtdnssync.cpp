@@ -81,7 +81,8 @@ int main(int argc, char ** argv) {
 	} else if (::strcmp(argv[argc_progress], "externip") == 0) {
 		try {
 			asio::io_service io_service;
-			auto ip = task_externip(io_service, cfg.cert_file);
+			auto ssl_ctx = setup_ssl_context(cfg.cert_file);
+			auto ip = task_externip(io_service, ssl_ctx);
 			std::cout << "current external ip: " << ip << "\n";
 
 		} catch (const std::exception & e) {
@@ -104,8 +105,9 @@ int main(int argc, char ** argv) {
 	} else if (::strcmp(argv[argc_progress], "update") == 0) {
 		try {
 			asio::io_service io_service;
+			auto ssl_ctx = setup_ssl_context(cfg.cert_file);
 			task_updateip(io_service, cfg.hostname, cfg.password,
-					cfg.cert_file);
+					ssl_ctx);
 		} catch (const std::exception & e) {
 			std::cerr << "Unable to update IP: " << e.what() << '\n';
 			return EXIT_FAILURE;
@@ -118,7 +120,8 @@ int main(int argc, char ** argv) {
 	} else if (::strcmp(argv[argc_progress], "check") == 0) {
 		try {
 			asio::io_service io_service;
-			auto externip = task_externip(io_service, cfg.cert_file);
+			auto ssl_ctx = setup_ssl_context(cfg.cert_file);
+			auto externip = task_externip(io_service, ssl_ctx);
 			auto ips = task_ip(io_service, cfg.hostname);
 			bool match { false };
 

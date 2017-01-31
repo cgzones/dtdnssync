@@ -1,10 +1,8 @@
 #include "dtdnssync.hpp"
 
-#include <asio/ssl/stream.hpp>
-#include <asio/ssl/rfc2818_verification.hpp>
 #include <asio/connect.hpp>
-
-static asio::ssl::context setup_ssl_context(const std::string & cert_file);
+#include <asio/ssl/rfc2818_verification.hpp>
+#include <asio/ssl/stream.hpp>
 
 std::vector<asio::ip::address> task_ip(asio::io_service& io_service,
 		const std::string & hostname) {
@@ -22,9 +20,8 @@ std::vector<asio::ip::address> task_ip(asio::io_service& io_service,
 }
 
 asio::ip::address task_externip(asio::io_service& io_service,
-		const std::string & cert_file) {
-	asio::ssl::context ctx { setup_ssl_context(cert_file) };
-	asio::ssl::stream<asio::ip::tcp::socket> socket { io_service, ctx };
+		asio::ssl::context& ssl_ctx) {
+	asio::ssl::stream<asio::ip::tcp::socket> socket { io_service, ssl_ctx };
 	asio::ip::tcp::resolver resolver { io_service };
 	const asio::ip::tcp::resolver::query query { "myip.dtdns.com", "https" };
 
@@ -81,9 +78,8 @@ asio::ip::address task_externip(asio::io_service& io_service,
 
 void task_updateip(asio::io_service& io_service, const std::string & hostname,
 		const std::string & password,
-		const std::string & cert_file) {
-	asio::ssl::context ctx { setup_ssl_context(cert_file) };
-	asio::ssl::stream<asio::ip::tcp::socket> socket { io_service, ctx };
+		asio::ssl::context& ssl_ctx) {
+	asio::ssl::stream<asio::ip::tcp::socket> socket { io_service, ssl_ctx };
 	asio::ip::tcp::resolver resolver { io_service };
 	const asio::ip::tcp::resolver::query query { "www.dtdns.com", "https" };
 
@@ -144,14 +140,18 @@ void task_updateip(asio::io_service& io_service, const std::string & hostname,
 	}
 }
 
-static asio::ssl::context setup_ssl_context(const std::string & cert_file) {
+asio::ssl::context setup_ssl_context(const std::string & cert_file) {
 	asio::ssl::context ctx { asio::ssl::context::tlsv12 };
 	ctx.set_verify_mode(
 			asio::ssl::verify_peer | asio::ssl::verify_fail_if_no_peer_cert);
 	ctx.set_verify_callback(
 			asio::ssl::rfc2818_verification { "www.dtdns.com" });
-	ctx.load_verify_file(cert_file);
+	try {
+		ctx.load_verify_file(cert_file);
+	} catch (std::exception& e) {
+		throw std::runtime_error { "Can not load certificate from " + cert_file
+				+ ": " + e.what() };
+	}
 
 	return ctx;
 }
-

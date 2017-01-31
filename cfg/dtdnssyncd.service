@@ -3,12 +3,9 @@ Description=dtdns ip updater
 After=network.target
 
 [Service]
-ExecStart=/usr/sbin/dtdnssyncd --nofork --nopid
+ExecStart=/usr/sbin/dtdnssyncd
 KillSignal=SIGINT
 User=dtdnssync
-
-#Type=forking
-#PIDFile=/run/dtdnssyncd.pid
 
 [Install]
 WantedBy=multi-user.target

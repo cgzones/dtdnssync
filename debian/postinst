@@ -2,14 +2,24 @@
 
 set -e
 
+# run on upgrade and new package installation
 if [ "$1" = "configure" ]; then
-  # run on upgrade and new package installation
+
+  # create user 
   if ! getent passwd dtdnssync >/dev/null; then
     adduser --system --group --quiet --no-create-home --home /nonexistent dtdnssync
   fi
+  
+  # set cfg file ownership
   chown -R root:dtdnssync /etc/dtdnssync/
-  touch /var/log/dtdnssyncd.log
-  chown dtdnssync:dtdnssync /var/log/dtdnssyncd.log
+  chmod 0640 /etc/dtdnssync/dtdnssync.cfg
+  
+  # setup logfile
+  if [ ! -e /var/log/dtdnssyncd.log ]
+  then
+    install -o dtdnssync -g dtdnssync -m 0640 /dev/null /var/log/dtdnssyncd.log
+  fi
+
 fi
 
 #DEBHELPER#
