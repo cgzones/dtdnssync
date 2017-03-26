@@ -1,9 +1,12 @@
 #!/usr/bin/make -f
 %:
-	dh $@ --parallel --with systemd
+	dh $@
 
 override_dh_auto_build:
 	dh_auto_build -- all MODE=RELEASE
 
 override_dh_install:
 	dh_install --fail-missing
+
+override_dh_installinit:
+# nothing

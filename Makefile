@@ -34,9 +34,9 @@ endif # DEBUG
 endif # DEV
 endif # MODE
 
-.PHONY: all clean install run_cppcheck run_clang-tidy debian_package debian_orig_tarball
+.PHONY: all clean install run_cppcheck run_clang-tidy debian_package run_lintian
 
-all: dtdnssync dtdnssyncd
+all: dtdnssync.1 dtdnssyncd.1
 
 OBJS = src/common.o src/config.o src/dtdns_driver.o
 HEAD = src/dtdnssync.hpp
@@ -46,12 +46,18 @@ dtdnssync: src/dtdnssync.o ${OBJS} ${HEAD}
 	
 dtdnssyncd: src/dtdnssyncd.o ${OBJS} ${HEAD}
 	${CXX} ${CXXFLAGS} $< ${OBJS} ${LDFLAGS} -o $@
+
+dtdnssync.1: dtdnssync
+	help2man -s 1 ./dtdnssync -n "dtdnssync client" -o dtdnssync.1
+
+dtdnssyncd.1: dtdnssyncd
+	help2man -s 1 ./dtdnssyncd -n "dtdnssync daemon" -o dtdnssyncd.1
 	
 %.o: %.cpp ${HEAD}
 	${CXX} ${CXXFLAGS} -c $< -o $@
 	
 clean:
-	rm -f dtdnssync dtdnssyncd src/*.o
+	rm -f dtdnssync dtdnssyncd src/*.o dtdnssync.1 dtdnssyncd.1
 	rm -Rf debian/.debhelper
 	rm -f debian/debhelper-build-stamp
 	rm -f debian/dtdnssync.debhelper.log
@@ -68,13 +74,13 @@ install: all
 	install -m 0755 dtdnssyncd ${SBIN}
 
 run_cppcheck:
-	cppcheck --quiet --force --enable=style --enable=missingInclude --inconclusive --std=c++11 --std=posix --library=std.cfg --library=posix.cfg --check-library --inline-suppr -j4 src/
+	cppcheck --force --enable=style --enable=missingInclude --inconclusive --std=c++11 --std=posix --library=std.cfg --library=posix.cfg --check-library --inline-suppr -j4 src/
 
 run_clang-tidy:
 	clang-tidy -header-filter=.* -checks=* src/*.cpp -- -std=c++14 -DASIO_STANDALONE -DASIO_NO_DEPRECATED -DASIO_NO_TYPEID
 
-debian_orig_tarball:
-	GZIP="-9n" tar zfc ../dtdnssync_0.1.orig.tar.gz --sort=name cfg/ debian/ LICENSE Makefile README.md src/ VERSION .cproject .project .travis.yml .settings/
-
 debian_package:
-	dpkg-buildpackage -nc -b -us -uc
+	dpkg-buildpackage -nc -us -uc
+
+run_lintian:
+	lintian -i -I -E --pedantic --show-overrides ../dtdnssync_*.deb

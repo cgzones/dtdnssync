@@ -1,9 +1,11 @@
 [Unit]
 Description=dtdns ip updater
+Documentation=man:dtdnssyncd(1)
 After=network.target
 
 [Service]
 ExecStart=/usr/sbin/dtdnssyncd
+ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGINT
 User=dtdnssync
 

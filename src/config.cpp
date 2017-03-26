@@ -1,4 +1,5 @@
 #include "dtdnssync.hpp"
+#include "logger.hpp"
 
 #include <fstream>
 #include <grp.h>
@@ -38,9 +39,8 @@ dtdnssync_config parse_config(const std::string & cfg_path) {
 				|| (::strcmp(pw->pw_name, "root") != 0) || !gr
 				|| ((::strcmp(gr->gr_name, "dtdnssync") != 0)
 						&& (::strcmp(gr->gr_name, "root") != 0))) {
-			throw std::runtime_error {
-					"Invalid ownership or permission for configuration file "
-							+ cfg_path };
+			FILE_LOG(log_level::WARNING) << "Weak ownership or permission set for configuration file "
+							<< cfg_path ;
 			}
 
 

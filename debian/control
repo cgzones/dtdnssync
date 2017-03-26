@@ -3,7 +3,7 @@ Section: net
 Priority: optional
 Maintainer: Christian Göttsche <cgzones@googlemail.com>
 Standards-Version: 3.9.8
-Build-Depends: debhelper (>= 9),
+Build-Depends: debhelper (>= 10),
                libasio-dev,
                libssl-dev
 

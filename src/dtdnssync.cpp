@@ -46,6 +46,12 @@ int main(int argc, char ** argv) {
 		return EXIT_SUCCESS;
 	}
 
+	if (::strcmp(argv[argc_progress], "version") == 0
+			or ::strcmp(argv[argc_progress], "--version") == 0) {
+		std::cout << version << '\n';
+		return EXIT_SUCCESS;
+	}
+
 	dtdnssync_config cfg;
 
 	try {
@@ -56,11 +62,7 @@ int main(int argc, char ** argv) {
 		return EXIT_FAILURE;
 	}
 
-	if (::strcmp(argv[argc_progress], "version") == 0) {
-		std::cout << version << '\n';
-
-		return EXIT_SUCCESS;
-	} else if (::strcmp(argv[argc_progress], "currentip") == 0) {
+	if (::strcmp(argv[argc_progress], "currentip") == 0) {
 		try {
 			asio::io_service io_service;
 			std::vector<asio::ip::address> addresses = task_ip(io_service,

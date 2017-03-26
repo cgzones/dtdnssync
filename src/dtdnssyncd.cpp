@@ -14,6 +14,7 @@ static void daemon(const dtdnssync_config & cfg);
 static void signal_handler(int sig);
 
 static volatile bool running = true;
+static volatile bool restart = false;
 
 int main(int argc, char ** argv) {
 
@@ -101,65 +102,70 @@ int main(int argc, char ** argv) {
 		return EXIT_FAILURE;
 	}
 
-	dtdnssync_config cfg;
+	do {
+                restart = false;
+                running = true;
 
-	try {
-		cfg = parse_config(cfg_path);
-	} catch (const std::exception & e) {
-		std::cerr << "Can not parse config: " << e.what() << '\n';
-		std::cerr << "EXITING!!!\n";
-		return EXIT_FAILURE;
-	}
+                dtdnssync_config cfg;
 
-	FILELog::domain() = "dtdnssyncd";
-	if (debug_flag == 1 or cfg.debug) {
-		FILELog::reporting_level() = log_level::DEBUG;
-	} else {
-		FILELog::reporting_level() = log_level::INFO;
-	}
-	if (foreground) {
-		Output2FILE::stream() = ::stdout;
-	} else if ((Output2FILE::stream() = ::fopen(log_path.c_str(), "a"))
-			== nullptr) {
-		std::cerr << "Can not open " << log_path << ": " << ::strerror(errno)
-				<< '\n';
-		std::cerr << "EXITING!!!\n";
-		return EXIT_FAILURE;
-	}
+                try {
+                        cfg = parse_config(cfg_path);
+                } catch (const std::exception & e) {
+                        std::cerr << "Can not parse config: " << e.what() << '\n';
+                        std::cerr << "EXITING!!!\n";
+                        return EXIT_FAILURE;
+                }
 
-	if (cfg.hostname.empty() or cfg.hostname == "yourdomain") {
-		std::cerr << "Configuration: Hostname not set     Exiting\n";
-		FILE_LOG(log_level::WARNING)
-				<< "Configuration: Hostname not set     Exiting\n";
-		return EXIT_SUCCESS;
-	}
+                FILELog::domain() = "dtdnssyncd";
+                if (debug_flag == 1 or cfg.debug) {
+                        FILELog::reporting_level() = log_level::DEBUG;
+                } else {
+                        FILELog::reporting_level() = log_level::INFO;
+                }
+                if (foreground) {
+                        Output2FILE::stream() = ::stdout;
+                } else if ((Output2FILE::stream() = ::fopen(log_path.c_str(), "a"))
+                                == nullptr) {
+                        std::cerr << "Can not open " << log_path << ": " << ::strerror(errno)
+                                        << '\n';
+                        std::cerr << "EXITING!!!\n";
+                        return EXIT_FAILURE;
+                }
 
-	FILE_LOG(log_level::DEBUG) << "configuration:";
-	FILE_LOG(log_level::DEBUG) << "  interval          : " << cfg.interval;
-	FILE_LOG(log_level::DEBUG) << "  cert_file         : " << cfg.cert_file;
-	FILE_LOG(log_level::DEBUG) << "  debug             : " << std::boolalpha
-			<< cfg.debug;
-	FILE_LOG(log_level::DEBUG) << "  hostname          : " << cfg.hostname;
-	FILE_LOG(log_level::DEBUG) << "  password          : ********";
+                if (cfg.hostname.empty() or cfg.hostname == "yourdomain") {
+                        std::cerr << "Configuration: Hostname not set     Exiting\n";
+                        FILE_LOG(log_level::WARNING)
+                                        << "Configuration: Hostname not set     Exiting\n";
+                        return EXIT_SUCCESS;
+                }
 
-	daemonize();
+                FILE_LOG(log_level::DEBUG) << "configuration:";
+                FILE_LOG(log_level::DEBUG) << "  interval          : " << cfg.interval;
+                FILE_LOG(log_level::DEBUG) << "  cert_file         : " << cfg.cert_file;
+                FILE_LOG(log_level::DEBUG) << "  debug             : " << std::boolalpha
+                                << cfg.debug;
+                FILE_LOG(log_level::DEBUG) << "  hostname          : " << cfg.hostname;
+                FILE_LOG(log_level::DEBUG) << "  password          : " << (cfg.password.empty() ? "empty" : "********");
 
-	FILE_LOG(log_level::INFO) << "Starting for host '" << cfg.hostname
-			<< "' with an interval of " << cfg.interval
-			<< " minutes";
+                daemonize();
 
-	try {
-		daemon(cfg);
-	} catch (const std::exception & e) {
-		FILE_LOG(log_level::ERROR) << "Unhandled exception escaped: "
-				<< e.what();
-		FILE_LOG(log_level::ERROR) << "EXITING!!!";
-		return EXIT_FAILURE;
-	} catch (...) {
-		FILE_LOG(log_level::ERROR) << "Unknown exception escaped!";
-		FILE_LOG(log_level::ERROR) << "EXITING!!!";
-		return EXIT_FAILURE;
-	}
+                FILE_LOG(log_level::INFO) << "Starting for host '" << cfg.hostname
+                                << "' with an interval of " << cfg.interval
+                                << " minutes";
+
+                try {
+                        daemon(cfg);
+                } catch (const std::exception & e) {
+                        FILE_LOG(log_level::ERROR) << "Unhandled exception escaped: "
+                                        << e.what();
+                        FILE_LOG(log_level::ERROR) << "EXITING!!!";
+                        return EXIT_FAILURE;
+                } catch (...) {
+                        FILE_LOG(log_level::ERROR) << "Unknown exception escaped!";
+                        FILE_LOG(log_level::ERROR) << "EXITING!!!";
+                        return EXIT_FAILURE;
+                }
+        } while(restart);
 
 	FILE_LOG(log_level::INFO) << "ending";
 
@@ -170,15 +176,16 @@ int main(int argc, char ** argv) {
 static void signal_handler(int sig) {
 	switch (sig) {
 	case SIGHUP:
-		FILE_LOG(log_level::INFO) << "hangup signal caught";
+		FILE_LOG(log_level::INFO) << "hangup signal caught - reloading";
 		running = false;
+                restart = true;
 		break;
 	case SIGINT:
-		FILE_LOG(log_level::INFO) << "interrupt signal caught";
+		FILE_LOG(log_level::INFO) << "interrupt signal caught - stopping";
 		running = false;
 		break;
 	case SIGTERM:
-		FILE_LOG(log_level::WARNING) << "terminate signal caught";
+		FILE_LOG(log_level::ERROR) << "terminate signal caught";
 		FILE_LOG(log_level::WARNING) << "Exiting!";
 		exit(0);
 	}

@@ -16,8 +16,7 @@ addons:
       - g++-6
       - clang-3.8
       - libssl-dev
-      - debhelper
-      - dh-systemd
+      - help2man
 
 before_install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
@@ -28,8 +27,6 @@ install:
 
 script:
   - make all
-
-  - make debian_package
 
 after_success:
   - ./dtdnssync --cfg cfg/dtdnssync.local.cfg externip
