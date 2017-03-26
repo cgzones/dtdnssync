@@ -84,3 +84,6 @@ debian_package:
 
 run_lintian:
 	lintian -i -I -E --pedantic --show-overrides ../dtdnssync_*.deb
+
+pretty:
+	clang-format -i -style=Google src/*
