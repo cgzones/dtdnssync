@@ -4,23 +4,20 @@
 #include <asio/ssl/rfc2818_verification.hpp>
 #include <asio/ssl/stream.hpp>
 
-std::vector<asio::ip::address> task_ip(asio::io_service& io_service,
-                                       const std::string& hostname) {
+std::vector<asio::ip::address> task_ip(asio::io_service &io_service, const std::string &hostname) {
   asio::ip::tcp::resolver resolver{io_service};
   const asio::ip::tcp::resolver::query query{hostname, ""};
 
   std::vector<asio::ip::address> result;
-  for (asio::ip::tcp::resolver::iterator i{resolver.resolve(query)};
-       i != asio::ip::tcp::resolver::iterator(); ++i) {
-    const asio::ip::tcp::endpoint& end(*i);
+  for (asio::ip::tcp::resolver::iterator i{resolver.resolve(query)}; i != asio::ip::tcp::resolver::iterator(); ++i) {
+    const asio::ip::tcp::endpoint &end(*i);
     result.emplace_back(end.address());
   }
 
   return result;
 }
 
-asio::ip::address task_externip(asio::io_service& io_service,
-                                asio::ssl::context& ssl_ctx) {
+asio::ip::address task_externip(asio::io_service &io_service, asio::ssl::context &ssl_ctx) {
   asio::ssl::stream<asio::ip::tcp::socket> socket{io_service, ssl_ctx};
   asio::ip::tcp::resolver resolver{io_service};
   const asio::ip::tcp::resolver::query query{"myip.dtdns.com", "https"};
@@ -50,9 +47,7 @@ asio::ip::address task_externip(asio::io_service& io_service,
       throw asio::system_error(ec);
     }
 
-    ostream.write(buf.data(),
-                  static_cast<std::streamsize>(
-                      len));  // ignore conversion warning size_t to long
+    ostream.write(buf.data(), static_cast<std::streamsize>(len));  // ignore conversion warning size_t to long
   }
 
   const std::string response = ostream.str();
@@ -72,12 +67,11 @@ asio::ip::address task_externip(asio::io_service& io_service,
     throw std::runtime_error{"http: no double newline: " + response};
   }
 
-  return asio::ip::address::from_string(
-      trim(std::string{response, pos2 + 4, response.length() - (pos2 + 4)}));
+  return asio::ip::address::from_string(trim(std::string{response, pos2 + 4, response.length() - (pos2 + 4)}));
 }
 
-void task_updateip(asio::io_service& io_service, const std::string& hostname,
-                   const std::string& password, asio::ssl::context& ssl_ctx) {
+void task_updateip(asio::io_service &io_service, const std::string &hostname, const std::string &password,
+                   asio::ssl::context &ssl_ctx) {
   asio::ssl::stream<asio::ip::tcp::socket> socket{io_service, ssl_ctx};
   asio::ip::tcp::resolver resolver{io_service};
   const asio::ip::tcp::resolver::query query{"www.dtdns.com", "https"};
@@ -86,8 +80,7 @@ void task_updateip(asio::io_service& io_service, const std::string& hostname,
   socket.lowest_layer().set_option(asio::ip::tcp::no_delay(true));
   socket.handshake(asio::ssl::stream<asio::ip::tcp::socket>::client);
 
-  const std::string request{"GET /api/autodns.cfm?id=" + hostname +
-                            "&pw=" + password +
+  const std::string request{"GET /api/autodns.cfm?id=" + hostname + "&pw=" + password +
                             "&client=dtdnssync HTTP/1.0\r\n"
                             "Host: www.dtdns.com\r\n"
                             "User-Agent: dtdnssync\r\n"
@@ -108,9 +101,7 @@ void task_updateip(asio::io_service& io_service, const std::string& hostname,
       throw asio::system_error(ec);
     }
 
-    ostream.write(buf.data(),
-                  static_cast<std::streamsize>(
-                      len));  // ignore conversion warning size_t to long
+    ostream.write(buf.data(), static_cast<std::streamsize>(len));  // ignore conversion warning size_t to long
   }
 
   const std::string response = ostream.str();
@@ -130,8 +121,7 @@ void task_updateip(asio::io_service& io_service, const std::string& hostname,
     throw std::runtime_error{"http: no double newline: " + response};
   }
 
-  std::string response_content =
-      trim(response.substr(pos2 + 4, response.length() - (pos2 + 4)));
+  std::string response_content = trim(response.substr(pos2 + 4, response.length() - (pos2 + 4)));
 
   const std::string expected{"Host " + hostname + " now points to "};
 
@@ -140,16 +130,14 @@ void task_updateip(asio::io_service& io_service, const std::string& hostname,
   }
 }
 
-asio::ssl::context setup_ssl_context(const std::string& cert_file) {
+asio::ssl::context setup_ssl_context(const std::string &cert_file) {
   asio::ssl::context ctx{asio::ssl::context::tlsv12};
-  ctx.set_verify_mode(asio::ssl::verify_peer |
-                      asio::ssl::verify_fail_if_no_peer_cert);
+  ctx.set_verify_mode(asio::ssl::verify_peer | asio::ssl::verify_fail_if_no_peer_cert);
   ctx.set_verify_callback(asio::ssl::rfc2818_verification{"www.dtdns.com"});
   try {
     ctx.load_verify_file(cert_file);
-  } catch (std::exception& e) {
-    throw std::runtime_error{"Can not load certificate from " + cert_file +
-                             ": " + e.what()};
+  } catch (std::exception &e) {
+    throw std::runtime_error{"Can not load certificate from " + cert_file + ": " + e.what()};
   }
 
   return ctx;

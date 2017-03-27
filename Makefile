@@ -34,7 +34,7 @@ endif # DEBUG
 endif # DEV
 endif # MODE
 
-.PHONY: all clean install run_cppcheck run_clang-tidy debian_package run_lintian
+.PHONY: all clean install run_cppcheck run_clang-tidy debian_package run_lintian pretty
 
 all: dtdnssync.1 dtdnssyncd.1
 
@@ -74,7 +74,7 @@ install: all
 	install -m 0755 dtdnssyncd ${SBIN}
 
 run_cppcheck:
-	cppcheck --force --enable=style --enable=missingInclude --inconclusive --std=c++11 --std=posix --library=std.cfg --library=posix.cfg --check-library --inline-suppr -j4 src/
+	cppcheck --force --enable=style --enable=missingInclude --inconclusive --std=c++11 --std=posix --library=std.cfg --library=posix.cfg --check-library --inline-suppr -j4 --error-exitcode=3 src/
 
 run_clang-tidy:
 	clang-tidy -header-filter=.* -checks=* src/*.cpp -- -std=c++14 -DASIO_STANDALONE -DASIO_NO_DEPRECATED -DASIO_NO_TYPEID
@@ -86,4 +86,4 @@ run_lintian:
 	lintian -i -I -E --pedantic --show-overrides ../dtdnssync_*.deb
 
 pretty:
-	clang-format -i -style=Google src/*
+	clang-format -i -style=file src/*

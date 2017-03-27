@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   std::string cfg_path{"/etc/dtdnssync/dtdnssync.cfg"};
   int argc_progress = 1;
 
@@ -28,15 +28,13 @@ int main(int argc, char** argv) {
     }
   }
 
-  if (::strcmp(argv[argc_progress], "help") == 0 or
-      ::strcmp(argv[argc_progress], "-h") == 0 or
+  if (::strcmp(argv[argc_progress], "help") == 0 or ::strcmp(argv[argc_progress], "-h") == 0 or
       ::strcmp(argv[1], "--help") == 0) {
     std::cout << "dtdnssync " << version << "\n"
               << "usage: " << argv[0] << " [options] command\n"
               << "\n"
               << "  options:\n"
-              << "    --cfg PATH       use custom configuration file (default: "
-              << cfg_path << ")\n"
+              << "    --cfg PATH       use custom configuration file (default: " << cfg_path << ")\n"
               << "\n"
               << "  commands:\n"
               << "    currentip        get IP currently set for your domain\n"
@@ -50,8 +48,7 @@ int main(int argc, char** argv) {
     return EXIT_SUCCESS;
   }
 
-  if (::strcmp(argv[argc_progress], "version") == 0 or
-      ::strcmp(argv[argc_progress], "--version") == 0) {
+  if (::strcmp(argv[argc_progress], "version") == 0 or ::strcmp(argv[argc_progress], "--version") == 0) {
     std::cout << version << '\n';
     return EXIT_SUCCESS;
   }
@@ -60,26 +57,23 @@ int main(int argc, char** argv) {
 
   try {
     cfg = parse_config(cfg_path);
-  } catch (const std::exception& e) {
-    std::cerr << "Can not parse config file " + cfg_path + ": " << e.what()
-              << '\n';
+  } catch (const std::exception &e) {
+    std::cerr << "Can not parse config file " + cfg_path + ": " << e.what() << '\n';
     return EXIT_FAILURE;
   }
 
   if (::strcmp(argv[argc_progress], "currentip") == 0) {
     try {
       asio::io_service io_service;
-      std::vector<asio::ip::address> addresses =
-          task_ip(io_service, cfg.hostname);
+      std::vector<asio::ip::address> addresses = task_ip(io_service, cfg.hostname);
       std::cout << "address(es) for " << cfg.hostname << ":";
-      for (const asio::ip::address& addr : addresses) {
+      for (const asio::ip::address &addr : addresses) {
         std::cout << " " << addr;
       }
       std::cout << "\n";
 
-    } catch (const std::exception& e) {
-      std::cerr << "Unable to get IP address for " << cfg.hostname << ": "
-                << e.what() << '\n';
+    } catch (const std::exception &e) {
+      std::cerr << "Unable to get IP address for " << cfg.hostname << ": " << e.what() << '\n';
       return EXIT_FAILURE;
     }
 
@@ -91,7 +85,7 @@ int main(int argc, char** argv) {
       auto ip = task_externip(io_service, ssl_ctx);
       std::cout << "current external ip: " << ip << "\n";
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
       std::cerr << "Unable to get external IP address: " << e.what() << '\n';
       return EXIT_FAILURE;
     }
@@ -112,13 +106,12 @@ int main(int argc, char** argv) {
       asio::io_service io_service;
       auto ssl_ctx = setup_ssl_context(cfg.cert_file);
       task_updateip(io_service, cfg.hostname, cfg.password, ssl_ctx);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
       std::cerr << "Unable to update IP: " << e.what() << '\n';
       return EXIT_FAILURE;
     }
 
-    std::cout << "IP address for " << cfg.hostname
-              << " was successfully updated\n";
+    std::cout << "IP address for " << cfg.hostname << " was successfully updated\n";
 
     return EXIT_SUCCESS;
   } else if (::strcmp(argv[argc_progress], "check") == 0) {
@@ -129,7 +122,7 @@ int main(int argc, char** argv) {
       auto ips = task_ip(io_service, cfg.hostname);
       bool match{false};
 
-      for (const auto& ip : ips) {
+      for (const auto &ip : ips) {
         if (ip == externip) {
           match = true;
           break;
@@ -137,25 +130,23 @@ int main(int argc, char** argv) {
       }
 
       if (match) {
-        std::cout << "IP is up to date for " << cfg.hostname << " (" << externip
-                  << ")\n";
+        std::cout << "IP is up to date for " << cfg.hostname << " (" << externip << ")\n";
       } else {
         std::cout << "IP is out of date for " << cfg.hostname << " (dns: ";
-        for (const auto& ip : ips) {
+        for (const auto &ip : ips) {
           std::cout << ip << " ";
         }
         std::cout << " current: " << externip << ")\n";
       }
 
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
       std::cerr << "Unable to check for IP update: " << e.what() << '\n';
       return EXIT_FAILURE;
     }
 
     return EXIT_SUCCESS;
   } else {
-    std::cerr << "Invalid option '" << argv[argc_progress] << "'! Try "
-              << argv[0] << " help\n";
+    std::cerr << "Invalid option '" << argv[argc_progress] << "'! Try " << argv[0] << " help\n";
     return EXIT_FAILURE;
   }
 }

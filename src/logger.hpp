@@ -62,8 +62,7 @@ std::ostringstream &Log<OutputPolicy>::get(const log_level &level) {
   const std::time_t now = std::time(nullptr);
   struct tm time {};
 
-  std::strftime(time_buffer, sizeof(time_buffer), "%c %Z",
-                ::localtime_r(&now, &time));
+  std::strftime(time_buffer, sizeof(time_buffer), "%c %Z", ::localtime_r(&now, &time));
   m_os << time_buffer;
   m_os << ' ' << std::setw(16) << Log::domain();
 

@@ -10,31 +10,29 @@
 #include <iostream>
 
 static void daemonize();
-static void daemon(const dtdnssync_config& cfg);
+static void daemon(const dtdnssync_config &cfg);
 static void signal_handler(int sig);
 
 static volatile bool running = true;
 static volatile bool restart = false;
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   std::string cfg_path{"/etc/dtdnssync/dtdnssync.cfg"};
   std::string log_path{"/var/log/dtdnssyncd.log"};
   int debug_flag = 0;
   bool foreground = false;
 
   while (true) {
-    const struct option long_options[] = {
-        {"debug", no_argument, &debug_flag, 1},
-        {"cfg-file", required_argument, nullptr, 'c'},
-        {"log-file", required_argument, nullptr, 'l'},
-        {"foreground", no_argument, nullptr, 'f'},
-        {"version", no_argument, nullptr, 'v'},
-        {"help", no_argument, nullptr, 'h'},
-        {nullptr, 0, nullptr, 0}};
+    const struct option long_options[] = {{"debug", no_argument, &debug_flag, 1},
+                                          {"cfg-file", required_argument, nullptr, 'c'},
+                                          {"log-file", required_argument, nullptr, 'l'},
+                                          {"foreground", no_argument, nullptr, 'f'},
+                                          {"version", no_argument, nullptr, 'v'},
+                                          {"help", no_argument, nullptr, 'h'},
+                                          {nullptr, 0, nullptr, 0}};
     int option_index = 0;
 
-    const int c =
-        getopt_long(argc, argv, "dc:hfvl:", long_options, &option_index);
+    const int c = getopt_long(argc, argv, "dc:hfvl:", long_options, &option_index);
 
     if (c == -1) {
       break;
@@ -72,8 +70,7 @@ int main(int argc, char** argv) {
                   << "    -c --cfg-file PATH    use custom configuration file "
                      "(default: "
                   << cfg_path << ")\n"
-                  << "    -l --log-file PATH    specify log file (default: "
-                  << log_path << ")\n"
+                  << "    -l --log-file PATH    specify log file (default: " << log_path << ")\n"
                   << "    -f --foreground       run daemon in foreground\n"
                   << "    -d --debug            turn on debug output\n"
                   << "    -v --version          display version and exit\n"
@@ -114,7 +111,7 @@ int main(int argc, char** argv) {
 
     try {
       cfg = parse_config(cfg_path);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
       std::cerr << "Can not parse config: " << e.what() << '\n';
       std::cerr << "EXITING!!!\n";
       return EXIT_FAILURE;
@@ -128,39 +125,33 @@ int main(int argc, char** argv) {
     }
     if (foreground) {
       Output2FILE::stream() = ::stdout;
-    } else if ((Output2FILE::stream() = ::fopen(log_path.c_str(), "a")) ==
-               nullptr) {
-      std::cerr << "Can not open " << log_path << ": " << ::strerror(errno)
-                << '\n';
+    } else if ((Output2FILE::stream() = ::fopen(log_path.c_str(), "a")) == nullptr) {
+      std::cerr << "Can not open " << log_path << ": " << ::strerror(errno) << '\n';
       std::cerr << "EXITING!!!\n";
       return EXIT_FAILURE;
     }
 
     if (cfg.hostname.empty() or cfg.hostname == "yourdomain") {
       std::cerr << "Configuration: Hostname not set     Exiting\n";
-      FILE_LOG(log_level::WARNING)
-          << "Configuration: Hostname not set     Exiting\n";
+      FILE_LOG(log_level::WARNING) << "Configuration: Hostname not set     Exiting\n";
       return EXIT_SUCCESS;
     }
 
     FILE_LOG(log_level::DEBUG) << "configuration:";
     FILE_LOG(log_level::DEBUG) << "  interval          : " << cfg.interval;
     FILE_LOG(log_level::DEBUG) << "  cert_file         : " << cfg.cert_file;
-    FILE_LOG(log_level::DEBUG)
-        << "  debug             : " << std::boolalpha << cfg.debug;
+    FILE_LOG(log_level::DEBUG) << "  debug             : " << std::boolalpha << cfg.debug;
     FILE_LOG(log_level::DEBUG) << "  hostname          : " << cfg.hostname;
-    FILE_LOG(log_level::DEBUG) << "  password          : "
-                               << (cfg.password.empty() ? "empty" : "********");
+    FILE_LOG(log_level::DEBUG) << "  password          : " << (cfg.password.empty() ? "empty" : "********");
 
     daemonize();
 
-    FILE_LOG(log_level::INFO)
-        << "Starting for host '" << cfg.hostname << "' with an interval of "
-        << cfg.interval << " minutes";
+    FILE_LOG(log_level::INFO) << "Starting for host '" << cfg.hostname << "' with an interval of " << cfg.interval
+                              << " minutes";
 
     try {
       daemon(cfg);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
       FILE_LOG(log_level::ERROR) << "Unhandled exception escaped: " << e.what();
       FILE_LOG(log_level::ERROR) << "EXITING!!!";
       return EXIT_FAILURE;
@@ -220,8 +211,7 @@ static void daemonize() {
   }
 }
 
-static void run(const dtdnssync_config& cfg, asio::ip::address& externip_cached,
-                asio::ssl::context& ssl_ctx) {
+static void run(const dtdnssync_config &cfg, asio::ip::address &externip_cached, asio::ssl::context &ssl_ctx) {
   FILE_LOG(log_level::DEBUG) << "running new check...";
 
   try {
@@ -232,19 +222,18 @@ static void run(const dtdnssync_config& cfg, asio::ip::address& externip_cached,
     FILE_LOG(log_level::DEBUG) << "cached extern IP:  " << externip_cached;
 
     if (externip == externip_cached) {
-      FILE_LOG(log_level::DEBUG)
-          << "extern IP not changed, no need to update IP";
+      FILE_LOG(log_level::DEBUG) << "extern IP not changed, no need to update IP";
     } else {
       FILE_LOG(log_level::DEBUG) << "extern IP might have changed";
 
       const auto hostnameips = task_ip(io_service, cfg.hostname);
       FILE_LOG(log_level::DEBUG) << "hostname IPs: ";
-      for (const auto& ip : hostnameips) {
+      for (const auto &ip : hostnameips) {
         FILE_LOG(log_level::DEBUG) << "- " << ip;
       }
 
       bool uptodate = false;
-      for (const auto& ip : hostnameips) {
+      for (const auto &ip : hostnameips) {
         if (ip == externip) {
           uptodate = true;
           break;
@@ -256,8 +245,7 @@ static void run(const dtdnssync_config& cfg, asio::ip::address& externip_cached,
 
         task_updateip(io_service, cfg.hostname, cfg.password, ssl_ctx);
 
-        FILE_LOG(log_level::INFO)
-            << "IP updated from " << externip_cached << " to " << externip;
+        FILE_LOG(log_level::INFO) << "IP updated from " << externip_cached << " to " << externip;
       } else {
         FILE_LOG(log_level::DEBUG) << "IP does not need to be updated";
       }
@@ -265,12 +253,12 @@ static void run(const dtdnssync_config& cfg, asio::ip::address& externip_cached,
       externip_cached = externip;
     }
 
-  } catch (const std::exception& e) {
+  } catch (const std::exception &e) {
     FILE_LOG(log_level::ERROR) << e.what();
   }
 }
 
-static void daemon(const dtdnssync_config& cfg) {
+static void daemon(const dtdnssync_config &cfg) {
   asio::ip::address externip_cached;
   auto ssl_ctx = setup_ssl_context(cfg.cert_file);
 
