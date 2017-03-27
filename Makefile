@@ -4,7 +4,7 @@ ETC     ?= ${DESTDIR}/etc
 SHARE   ?= ${DESTDIR}/usr/share
 
 #general flags
-CXXFLAGS = -std=c++14
+CXXFLAGS += -std=c++14
 
 # asio flags
 CXXFLAGS += -DASIO_STANDALONE -DASIO_NO_DEPRECATED -DASIO_NO_TYPEID
@@ -14,7 +14,7 @@ CXXFLAGS += -Wall -Wextra -Wpedantic -Wconversion -Wformat -Wformat-security -We
 CXXFLAGS += -O2 -fstack-protector-strong -fPIE -D_FORTIFY_SOURCE=2
 
 # library link flags
-LDFLAGS = -lpthread -lssl -lcrypto
+LDFLAGS += -lpthread -lssl -lcrypto
 
 # security link flags
 LDFLAGS += -fPIE -pie -Wl,-z,relro -Wl,-z,now -Wl,--no-undefined
@@ -80,10 +80,10 @@ run_clang-tidy:
 	clang-tidy -header-filter=.* -checks=* src/*.cpp -- -std=c++14 -DASIO_STANDALONE -DASIO_NO_DEPRECATED -DASIO_NO_TYPEID
 
 debian_package:
-	dpkg-buildpackage -nc -us -uc
+	debuild -nc -us -uc
 
 run_lintian:
-	lintian -i -I -E --pedantic --show-overrides ../dtdnssync_*.deb
+	lintian -i -I -E --pedantic --show-overrides ../dtdnssync*.deb
 
 pretty:
 	clang-format -i -style=file src/*
