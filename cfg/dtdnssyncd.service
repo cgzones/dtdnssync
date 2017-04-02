@@ -8,6 +8,7 @@ ExecStart=/usr/sbin/dtdnssyncd
 ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGINT
 User=dtdnssync
+Restart=on-abnormal
 
 [Install]
 WantedBy=multi-user.target
