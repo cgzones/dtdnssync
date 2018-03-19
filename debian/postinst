@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -e
+set -eu
 
 # run on upgrade and new package installation
 if [ "$1" = "configure" ]; then
@@ -11,7 +11,8 @@ if [ "$1" = "configure" ]; then
   fi
   
   # set cfg file ownership
-  chown -R root:dtdnssync /etc/dtdnssync/
+  chown root:dtdnssync /etc/dtdnssync/
+  chown root:dtdnssync /etc/dtdnssync/dtdnssync.cfg
   chmod 0640 /etc/dtdnssync/dtdnssync.cfg
   
   # setup logfile

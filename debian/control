@@ -2,8 +2,8 @@ Source: dtdnssync
 Section: net
 Priority: optional
 Maintainer: Christian Göttsche <cgzones@googlemail.com>
-Standards-Version: 4.0.0
-Build-Depends: debhelper (>= 10),
+Standards-Version: 4.1.3
+Build-Depends: debhelper (>= 11),
                libasio-dev,
                libssl-dev
 
