@@ -1,2 +1,3 @@
-dtdnssync.1
-dtdnssyncd.1
+man/dtdnssync.8
+man/dtdnssyncd.8
+man/dtdnssync.conf.5

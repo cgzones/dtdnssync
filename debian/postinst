@@ -5,16 +5,16 @@ set -eu
 # run on upgrade and new package installation
 if [ "$1" = "configure" ]; then
 
-  # create user 
+  # create user
   if ! getent passwd dtdnssync >/dev/null; then
     adduser --system --group --quiet --no-create-home --home /nonexistent dtdnssync
   fi
-  
+
   # set cfg file ownership
   chown root:dtdnssync /etc/dtdnssync/
-  chown root:dtdnssync /etc/dtdnssync/dtdnssync.cfg
-  chmod 0640 /etc/dtdnssync/dtdnssync.cfg
-  
+  chown root:dtdnssync /etc/dtdnssync/dtdnssync.conf
+  chmod 0640 /etc/dtdnssync/dtdnssync.conf
+
   # setup logfile
   if [ ! -e /var/log/dtdnssyncd.log ]
   then

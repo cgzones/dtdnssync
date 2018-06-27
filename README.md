@@ -20,13 +20,13 @@ dtdnssync is an update client for keeping your dynamic ip at the DNS hosting ser
 - asciidoctor
 
 ```sh
-apt install --no-install-recommends libssl-dev libasio-dev debhelper
+sudo apt install --no-install-recommends libssl-dev libasio-dev debhelper asciidoctor
 ```
 
 #### Building
 
 ```sh
-dpkg-buildpackage -b -s -uc
+dpkg-buildpackage -b -us -uc
 ```
 
 #### Installation
@@ -46,14 +46,16 @@ sudo dpkg -i ../dtdnssync_*.deb
 #### Building
 
 ```sh
-make all
+make
 ```
 
 #### Installation
 
 ```sh
+sudo adduser --system --group --quiet --no-create-home --home /nonexistent dtdnssync # or equivalent
 sudo make install
-adduser --system --group --quiet --no-create-home --home /nonexistent dtdnssync # or equivalent
+sudo make fixperms
+sudo cp cfg/dtdnssyncd.service /lib/systemd/system
 ```
 
 ## Configuration

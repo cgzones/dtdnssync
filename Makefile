@@ -2,7 +2,6 @@
 SBIN    ?= ${DESTDIR}/usr/sbin
 ETC     ?= ${DESTDIR}/etc
 SHARE   ?= ${DESTDIR}/usr/share
-SYSTEMD ?= ${DESTDIR}/lib/systemd/system
 
 #general flags
 CXXFLAGS += -std=c++14
@@ -67,15 +66,17 @@ clean:
 	rm -f man/dtdnssync.8 man/dtdnssyncd.8 man/dtdnssync.conf.5
 
 install: default
-	install -m 0750 -d -g dtdnssync ${ETC}/dtdnssync/
-	install -m 0640 -g dtdnssync cfg/dtdnssync.conf ${ETC}/dtdnssync/
+	install -m 0750 -d ${ETC}/dtdnssync/
+	install -m 0640 cfg/dtdnssync.conf ${ETC}/dtdnssync/
 	install -m 0755 -d ${SHARE}/dtdnssync/
 	install -m 0440 cfg/dtdns.pem ${SHARE}/dtdnssync/
 
 	install -m 0755 dtdnssync ${SBIN}
 	install -m 0755 dtdnssyncd ${SBIN}
 
-	install -m 0755 cfg/dtdnssyncd.service ${SYSTEMD}
+fixperms:
+	chown :dtdnssync ${ETC}/dtdnssync/ ${ETC}/dtdnssync/dtdnssync.conf
+
 
 run_cppcheck:
 	cppcheck --force --enable=style --enable=missingInclude --inconclusive --std=c++11 --std=posix --library=std.cfg --library=posix.cfg --check-library --inline-suppr -j4 --error-exitcode=3 src/
