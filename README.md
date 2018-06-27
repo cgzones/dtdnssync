@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/cgzones/dtdnssync.svg?branch=master)](https://travis-ci.org/cgzones/dtdnssync)
 [![Coverity Scan](https://scan.coverity.com/projects/10843/badge.svg)](https://scan.coverity.com/projects/cgzones-dtdnssync)
+[![Total Alerts](https://img.shields.io/lgtm/alerts/g/cgzones/dtdnssync.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/cgzones/dtdnssync/alerts/)
 [![GitHub license](https://img.shields.io/badge/license-MIT-green.svg)](https://raw.githubusercontent.com/cgzones/dtdnssync/master/LICENSE)
 
 ## Overview
