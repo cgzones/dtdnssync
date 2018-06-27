@@ -2,6 +2,7 @@
 SBIN    ?= ${DESTDIR}/usr/sbin
 ETC     ?= ${DESTDIR}/etc
 SHARE   ?= ${DESTDIR}/usr/share
+SYSTEMD ?= ${DESTDIR}/lib/systemd/system
 
 #general flags
 CXXFLAGS += -std=c++14
@@ -26,38 +27,36 @@ ifeq (${MODE}, DEV)
 else
 ifeq (${MODE}, DEBUG)
 	CXXFLAGS += -g
-else
-ifeq (${MODE}, RELEASE)
-	CXXFLAGS += -flto -DASIO_DISABLE_BUFFER_DEBUGGING
-endif # RELEASE
 endif # DEBUG
 endif # DEV
+else
+	# release mode
+	CXXFLAGS += -flto -DASIO_DISABLE_BUFFER_DEBUGGING
 endif # MODE
 
-.PHONY: all clean install run_cppcheck run_clang-tidy debian_package run_lintian pretty
+.PHONY: all default doc clean install run_cppcheck run_clang-tidy debian_package run_lintian pretty
 
-all: dtdnssync.1 dtdnssyncd.1
+default: dtdnssync dtdnssyncd
+all: default doc
 
 OBJS = src/common.o src/config.o src/dtdns_driver.o
 HEAD = src/dtdnssync.hpp
 
 dtdnssync: src/dtdnssync.o ${OBJS} ${HEAD}
 	${CXX} ${CXXFLAGS} $< ${OBJS} ${LDFLAGS} -o $@
-	
+
 dtdnssyncd: src/dtdnssyncd.o ${OBJS} ${HEAD}
 	${CXX} ${CXXFLAGS} $< ${OBJS} ${LDFLAGS} -o $@
 
-dtdnssync.1: dtdnssync
-	help2man -s 1 ./dtdnssync -n "dtdnssync client" -o dtdnssync.1
-
-dtdnssyncd.1: dtdnssyncd
-	help2man -s 1 ./dtdnssyncd -n "dtdnssync daemon" -o dtdnssyncd.1
-	
 %.o: %.cpp ${HEAD}
 	${CXX} ${CXXFLAGS} -c $< -o $@
-	
+
+DOCS = man/dtdnssync.8.adoc man/dtdnssyncd.8.adoc man/dtdnssync.conf.5.adoc
+doc: ${DOCS} man/footer.adoc
+	asciidoctor -b manpage -v ${DOCS}
+
 clean:
-	rm -f dtdnssync dtdnssyncd src/*.o dtdnssync.1 dtdnssyncd.1
+	rm -f dtdnssync dtdnssyncd src/*.o
 	rm -Rf debian/.debhelper
 	rm -f debian/debhelper-build-stamp
 	rm -f debian/dtdnssync.debhelper.log
@@ -65,13 +64,18 @@ clean:
 	rm -f debian/files
 	rm -Rf debian/dtdnssync
 	rm -f debian/*.debhelper
+	rm -f man/dtdnssync.8 man/dtdnssyncd.8 man/dtdnssync.conf.5
 
-install: all
-	install -m 0640 cfg/dtdnssync.cfg ${ETC}/dtdnssync/
+install: default
+	install -m 0750 -d -g dtdnssync ${ETC}/dtdnssync/
+	install -m 0640 -g dtdnssync cfg/dtdnssync.conf ${ETC}/dtdnssync/
+	install -m 0755 -d ${SHARE}/dtdnssync/
 	install -m 0440 cfg/dtdns.pem ${SHARE}/dtdnssync/
 
 	install -m 0755 dtdnssync ${SBIN}
 	install -m 0755 dtdnssyncd ${SBIN}
+
+	install -m 0755 cfg/dtdnssyncd.service ${SYSTEMD}
 
 run_cppcheck:
 	cppcheck --force --enable=style --enable=missingInclude --inconclusive --std=c++11 --std=posix --library=std.cfg --library=posix.cfg --check-library --inline-suppr -j4 --error-exitcode=3 src/
@@ -83,7 +87,7 @@ debian_package:
 	debuild -nc -us -uc
 
 run_lintian:
-	lintian -i -I -E --pedantic --show-overrides ../dtdnssync*.deb
+	lintian -i -I -E --pedantic --show-overrides ../dtdnssync*.changes
 
 pretty:
 	clang-format -i -style=file src/*

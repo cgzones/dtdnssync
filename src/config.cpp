@@ -28,7 +28,7 @@ dtdnssync_config parse_config(const std::string & cfg_path)
         struct stat file_stat;
 
         if (::stat(cfg_path.c_str(), &file_stat) < 0) {
-            throw std::runtime_error{ "Can not stat configuration file " + cfg_path + ": " + ::strerror(errno) };
+            throw std::runtime_error{ "Can not stat configuration file '" + cfg_path + "': " + ::strerror(errno) };
         }
         // cppcheck-suppress getpwuidCalled
         struct passwd * pw = ::getpwuid(file_stat.st_uid);

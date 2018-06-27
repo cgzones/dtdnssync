@@ -6,7 +6,7 @@ using namespace dtdnssync;
 
 int main(int argc, char ** argv)
 {
-    std::string cfg_path{ "/etc/dtdnssync/dtdnssync.cfg" };
+    std::string cfg_path{ "/etc/dtdnssync/dtdnssync.conf" };
     int argc_progress = 1;
 
     if (argc < 2) {
@@ -99,7 +99,7 @@ int main(int argc, char ** argv)
                   << "  cert_file         : " << cfg.cert_file << '\n'
                   << "  debug             : " << std::boolalpha << cfg.debug << '\n'
                   << "  hostname          : " << cfg.hostname << '\n'
-                  << "  password          : ********\n"
+                  << "  password          : " << (cfg.password.empty() ? "empty" : "********") << '\n'
                   << '\n';
 
         return EXIT_SUCCESS;

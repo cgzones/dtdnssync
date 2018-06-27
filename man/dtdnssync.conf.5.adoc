@@ -1,0 +1,50 @@
+dtdnssync.conf(5)
+=================
+:doctype: manpage
+
+
+== NAME
+dtdnssync.conf - dtdnssync configuration file.
+
+
+[[description]]
+== DESCRIPTION
+The '/etc/dtdnssync/dtdnssync.conf' file is the default source for daemon configurations.
+It is by default loaded by *dtdnssync*(8) and *dtdnssyncd*(8).
+
+
+[[security]]
+== SECURITY
+Due to the fact that this file might contain the password for your dtdns.com account in plain text, make sure that this file has *strict* access permissions set.
+
+
+[[syntax]]
+== SYNTAX
+Lines with an leading `#` are ignored as comment. +
+Options are set via key-value pairs: `key = value`.
+
+
+[[options]]
+== OPTIONS
+*interval*::
+    Set the timeout between update checks (in minutes). Defaults to _6_.
+
+*cert_file*::
+    Certificate file for pinning the dtdns.com domain. Defaults to '/usr/share/dtdnssync/dtdns.pem'.
+
+*hostname*::
+    Set the host for the ip update, e.g. mydomain.dtdns.net.
+
+*password*::
+    Set the password for the dtdns account.
+
+*debug*::
+    Enable debugging. Defaults to _false_.
+
+
+[[see-also]]
+== SEE ALSO
+*dtdnssync*(8),
+*dtdnssyncd*(8)
+
+include::footer.adoc[]

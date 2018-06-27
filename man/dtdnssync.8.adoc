@@ -1,0 +1,60 @@
+dtdnssync(8)
+============
+:doctype: manpage
+
+
+== NAME
+dtdnssync - command line client
+
+
+[[synopsis]]
+== SYNOPSIS
+*dtdnssync* ['OPTIONS'] 'ACTION'
+
+
+[[description]]
+== DESCRIPTION
+The *dtdnssync* client is designed for manual operations on the command line.
+One can check the current external ip of the host, the current set ip for the saved domain.
+Also one can check wheteher an ip update is necassary and run sch an update.
+The domain configuration is either taken by default from the global configuration file *dtdnssync.conf*(5) or from the configuration supplied as argument.
+
+
+[[options]]
+== OPTIONS
+*--cfg* 'path'::
+    Load configuration from a file at 'path' (default: '/etc/dtdnssync/dtdnssync.conf').
+
+
+[[actions]]
+== ACTIONS
+
+*currentip*::
+    Get the ip set for the configured domain.
+
+*externip*::
+    Get the extern ip for the current host the command is run on.
+
+*check*::
+    Check if an update for the configured domain is necessary. _NO_ update is done.
+
+*update*::
+    Update the ip for the configured domain, if necessary.
+
+*dumpconfig*::
+    Print the current configuration.
+
+*version*::
+    Print the version of dtdnssync.
+
+*help*::
+    Print help for dtdnssync usage.
+
+
+[[see-also]]
+== SEE ALSO
+*dtdnssync.conf*(5),
+*dtdnssyncd*(8)
+
+
+include::footer.adoc[]

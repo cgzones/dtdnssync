@@ -1,0 +1,16 @@
+[[bugs]]
+== BUGS
+If you find a bug in this software or have a feature request, please file an issue at <https://github.com/cgzones/dtdnssync/issues/new>.
+
+[[author]]
+== AUTHOR
+dtdnssync is written by Christian Göttsche
+
+[[resources]]
+== RESOURCES
+Main web site: <https://github.com/cgzones/dtdnssync>
+
+[[copying]]
+== COPYING
+Copyright 2016-{docyear} Christian Göttsche +
+License: MIT License <http://opensource.org/licenses/MIT>

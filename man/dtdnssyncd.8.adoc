@@ -1,0 +1,49 @@
+dtdnssyncd(8)
+=============
+:doctype: manpage
+
+
+== NAME
+dtdnssyncd - background update daemon
+
+
+[[synopsis]]
+== SYNOPSIS
+*dtdnssyncd* ['OPTIONS']
+
+
+[[description]]
+== DESCRIPTION
+The *dtdnssyncd* daemon is the background service of dtdnssync.
+It continuously checks in a configureable interval if an update is neceassary, and performs one if needed.
+The domain configuration is either taken by default from the global configuration file *dtdnssync.conf*(5) or from the configuration supplied as argument.
+
+
+[[options]]
+== OPTIONS
+*-c*, *--cfg-file* 'path'::
+    Load configuration from a file at 'path' (default: '/etc/dtdnssync/dtdnssync.conf').
+
+*-l*, *--log-file* 'path'::
+    Log to a file at 'path' (default: '/Var/log/dtdnssyncd.log').
+
+*-f*, *--foreground*::
+    Run the daemon in foreground (useful for systemd).
+
+*-v*, *--version*::
+    Print the version of dtdnssync.
+
+*-h*, *--help*::
+    Print help for the usage of dtdnssyncd.
+
+*--debug*::
+    Enable debug output.
+
+
+[[see-also]]
+== SEE ALSO
+*dtdnssync.conf*(5),
+*dtdnssync*(8)
+
+
+include::footer.adoc[]

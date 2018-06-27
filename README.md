@@ -15,8 +15,9 @@ dtdnssync is an update client for keeping your dynamic ip at the DNS hosting ser
 #### Requirements
 
 - c++14 compliant compiler (e.g. gcc-6, clang-3.9)
-- openssl and asio development headers
+- openssl and asio development headers (libasio-dev, libssl-dev)
 - debhelper tools
+- asciidoctor
 
 ```sh
 apt install --no-install-recommends libssl-dev libasio-dev debhelper
@@ -40,6 +41,7 @@ sudo dpkg -i ../dtdnssync_*.deb
 
 - c++14 compliant compiler (e.g. gcc-6, clang-3.9)
 - openssl and asio development headers
+- optional: asciidoctor for man pages
 
 #### Building
 
@@ -51,11 +53,12 @@ make all
 
 ```sh
 sudo make install
+adduser --system --group --quiet --no-create-home --home /nonexistent dtdnssync # or equivalent
 ```
 
 ## Configuration
 
-Configure the dtdns account credentials in `/etc/dtdnssync/dtdnssync.cfg` and restart the service.
+Configure the dtdns account credentials in `/etc/dtdnssync/dtdnssync.conf` and restart the service.
 
 ```sh
 systemctl restart dtdnssync

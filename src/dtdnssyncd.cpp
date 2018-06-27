@@ -20,7 +20,7 @@ static volatile bool restart = false;
 
 int main(int argc, char ** argv)
 {
-    std::string cfg_path{ "/etc/dtdnssync/dtdnssync.cfg" };
+    std::string cfg_path{ "/etc/dtdnssync/dtdnssync.conf" };
     std::string log_path{ "/var/log/dtdnssyncd.log" };
     int debug_flag = 0;
     bool foreground = false;
@@ -135,8 +135,8 @@ int main(int argc, char ** argv)
         }
 
         if (cfg.hostname.empty() or cfg.hostname == "yourdomain") {
-            std::cerr << "Configuration: Hostname not set     Exiting\n";
-            FILE_LOG(log_level::WARNING) << "Configuration: Hostname not set     Exiting\n";
+            std::cerr << "Configuration: Hostname not set - Exiting!\n";
+            FILE_LOG(log_level::WARNING) << "Configuration: Hostname not set - Exiting!\n";
             return EXIT_SUCCESS;
         }
 
