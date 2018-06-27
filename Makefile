@@ -7,7 +7,7 @@ SHARE   ?= ${DESTDIR}/usr/share
 CXXFLAGS += -std=c++14
 
 # asio flags
-CXXFLAGS += -DASIO_STANDALONE -DASIO_NO_DEPRECATED -DASIO_NO_TYPEID
+CXXFLAGS += -DASIO_STANDALONE -DASIO_NO_DEPRECATED -DASIO_NO_TYPEID -DASIO_DISABLE_BUFFER_DEBUGGING
 
 # security flags
 CXXFLAGS += -Wall -Wextra -Wpedantic -Wconversion -Wformat -Wformat-security -Werror
@@ -28,9 +28,6 @@ ifeq (${MODE}, DEBUG)
 	CXXFLAGS += -g
 endif # DEBUG
 endif # DEV
-else
-	# release mode
-	CXXFLAGS += -flto -DASIO_DISABLE_BUFFER_DEBUGGING
 endif # MODE
 
 .PHONY: all default doc clean install run_cppcheck run_clang-tidy debian_package run_lintian pretty

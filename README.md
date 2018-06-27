@@ -26,7 +26,7 @@ sudo apt install --no-install-recommends libssl-dev libasio-dev debhelper asciid
 #### Building
 
 ```sh
-dpkg-buildpackage -b -us -uc
+debuild -us -uc
 ```
 
 #### Installation
