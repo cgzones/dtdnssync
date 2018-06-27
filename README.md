@@ -2,10 +2,11 @@
 
 [![Build Status](https://travis-ci.org/cgzones/dtdnssync.svg?branch=master)](https://travis-ci.org/cgzones/dtdnssync)
 [![Coverity Scan](https://scan.coverity.com/projects/10843/badge.svg)](https://scan.coverity.com/projects/cgzones-dtdnssync)
+[![GitHub license](https://img.shields.io/badge/license-MIT-green.svg)](https://raw.githubusercontent.com/cgzones/dtdnssync/master/LICENSE)
 
 ## Overview
 
-dtdnssync is a tool to update your dynamic ip at the DNS hosting service https://www.dtdns.com.
+dtdnssync is an update client for keeping your dynamic ip at the DNS hosting service https://www.dtdns.com up2date.
 
 ## Installation
 
@@ -18,7 +19,7 @@ dtdnssync is a tool to update your dynamic ip at the DNS hosting service https:/
 - debhelper tools
 
 ```sh
-apt install --no-install-recommends libssl-dev libasio-dev debhelper dh-systemd
+apt install --no-install-recommends libssl-dev libasio-dev debhelper
 ```
 
 #### Building
@@ -31,12 +32,6 @@ dpkg-buildpackage -b -s -uc
 
 ```sh
 sudo dpkg -i ../dtdnssync_*.deb
-```
-
-Configure the dtdns account credentials in `/etc/dtdnssync/dtdnssync.cfg` and restart the service.
-
-```sh
-systemctl restart dtdnssync
 ```
 
 ### Non Debian
@@ -56,4 +51,19 @@ make all
 
 ```sh
 sudo make install
+```
+
+## Configuration
+
+Configure the dtdns account credentials in `/etc/dtdnssync/dtdnssync.cfg` and restart the service.
+
+```sh
+systemctl restart dtdnssync
+```
+
+To manually check or update your ip, run:
+
+```sh
+dtdnssync check
+dtdnssync update
 ```

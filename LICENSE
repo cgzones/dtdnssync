@@ -7,7 +7,7 @@ dtdnssync uses Asio C++ Library licensed under Boost Software License - Version 
 dtdnssync uses OpenSSL via Asio C++ Library licensed under OpenSSL License and the original SSLeay
 <https://www.openssl.org/source/license.txt>
 
-Copyright (c) 2016 Christian Göttsche
+Copyright (c) 2016-2018 Christian Göttsche
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
